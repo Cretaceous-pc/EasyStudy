@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: easyStudy-backend
+
+  profiles:
+    active: dev
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE  # 统一 snake_case，匹配接口契约文档
+
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+jwt:
+  expiration: ${JWT_EXPIRATION:86400}
+
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+
+fastapi:
+  url: ${FASTAPI_URL:http://localhost:8000}
+
+logging:
+  level:
+    com.easystudy: INFO

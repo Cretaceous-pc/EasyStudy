@@ -1,0 +1,55 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+/* Claude New Academic — CSS Variables */
+:root {
+  --parchment: #f5f4ed;
+  --ivory: #faf9f5;
+  --warm-sand: #e8e6dc;
+  --near-black: #141413;
+  --charcoal-warm: #4d4c48;
+  --olive-gray: #5e5d59;
+  --stone-gray: #87867f;
+  --warm-silver: #b0aea5;
+  --border-cream: #f0eee6;
+  --border-warm: #e8e6dc;
+  --accent: #c96442;
+  --accent-light: #e8d4c8;
+  --accent-hover: #b55738;
+  --focus-blue: #3898ec;
+  --error-crimson: #b53333;
+
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Global */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--parchment);
+  color: var(--near-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--warm-sand); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--stone-gray); }
+
+/* Animations */
+@keyframes msgFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOutShrink {
+  to { opacity: 0; transform: scale(0.96); height: 0; margin: 0; overflow: hidden; }
+}
