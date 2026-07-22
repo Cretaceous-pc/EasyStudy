@@ -61,6 +61,7 @@ public class SecurityConfig {
                             ApiResponse.error(40101, "无效的访问令牌", "请先登录")
                         )
                     );
+                    response.flushBuffer();
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -70,6 +71,7 @@ public class SecurityConfig {
                             ApiResponse.error(40102, "权限不足", "当前角色无权执行此操作")
                         )
                     );
+                    response.flushBuffer();
                 })
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

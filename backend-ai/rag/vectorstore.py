@@ -5,13 +5,108 @@
 - chroma-http:  Chroma Docker 容器（推荐，无需本地编译依赖）
 - chroma:       Chroma 嵌入式（需要 Visual C++ Build Tools）
 - qdrant:       Qdrant（生产环境，待实现）
+
+Embedding 后端:
+- chroma-builtin: ChromaDB 内置 ONNX 模型（默认，all-MiniLM-L6-v2）
+- api:            OpenAI 兼容 Embedding API（需配置 embedding_model 等）
 """
 
 import os
+import time
+import logging
 from typing import List, Optional
 
 from services.config import get_settings
 
+***REMOVED*** chromadb 可能未安装（仅类型检查时需要）
+try:
+    from chromadb.api.types import EmbeddingFunction as _EmbeddingFunction
+except ImportError:
+    _EmbeddingFunction = object
+
+logger = logging.getLogger(__name__)
+
+
+***REMOVED*** ══════════════════════════════════════════════════════════════════
+***REMOVED*** API Embedding Function
+***REMOVED*** ══════════════════════════════════════════════════════════════════
+
+class APIEmbeddingFunction(_EmbeddingFunction):
+    """OpenAI 兼容 Embedding API 封装，支持 OpenAI / 智谱 等"""
+
+    def __init__(self, model: str, api_key: str, base_url: str, batch_size: int = 100):
+        self.model = model
+        self.api_key = api_key
+        self.base_url = base_url
+        self.batch_size = batch_size
+        self._client = None
+
+    @property
+    def client(self):
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        return self._client
+
+    def __call__(self, texts: List[str]) -> List[List[float]]:
+        """将文本列表转为 embedding 列表"""
+        all_embeddings = []
+        total = len(texts)
+
+        for i in range(0, total, self.batch_size):
+            batch = texts[i:i + self.batch_size]
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    resp = self.client.embeddings.create(
+                        model=self.model,
+                        input=batch,
+                    )
+                    batch_embeddings = [d.embedding for d in resp.data]
+                    all_embeddings.extend(batch_embeddings)
+                    break
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        wait = 2 ** attempt
+                        logger.warning(
+                            f"Embedding API 失败 (attempt {attempt + 1}/{max_retries}): {e}，"
+                            f"{wait}s 后重试..."
+                        )
+                        time.sleep(wait)
+                    else:
+                        raise RuntimeError(
+                            f"Embedding API 调用失败，已重试 {max_retries} 次: {e}"
+                        ) from e
+
+            if i + self.batch_size < total:
+                logger.info(f"   Embedding 进度: {min(i + self.batch_size, total)}/{total}")
+
+        return all_embeddings
+
+
+def _build_embedding_function(settings):
+    """根据配置构建 embedding function，None 表示使用 ChromaDB 内置"""
+    if settings.embedding_backend == "api":
+        api_key = settings.embedding_api_key or settings.deepseek_api_key
+        base_url = settings.embedding_base_url or settings.deepseek_base_url
+        if not api_key:
+            raise ValueError(
+                "embedding_backend=api 但未配置 embedding_api_key 或 deepseek_api_key"
+            )
+        logger.info(f"   Embedding: API ({settings.embedding_model})")
+        return APIEmbeddingFunction(
+            model=settings.embedding_model,
+            api_key=api_key,
+            base_url=base_url,
+        )
+    ***REMOVED*** chroma-builtin: 返回 None，ChromaDB 使用内置 ONNX 模型
+    logger.info("   Embedding: ChromaDB 内置 (all-MiniLM-L6-v2)")
+    return None
+
+
+***REMOVED*** ══════════════════════════════════════════════════════════════════
+***REMOVED*** Vector Store
+***REMOVED*** ══════════════════════════════════════════════════════════════════
 
 def get_vectorstore(collection_name: str = "easystudy_chunks"):
     """
@@ -32,21 +127,22 @@ def _get_chroma(collection_name: str, settings):
     """Chroma 向量库（HTTP 或嵌入式）"""
     import chromadb
 
+    ef = _build_embedding_function(settings)
+
     if settings.vector_backend == "chroma-http":
-        ***REMOVED*** Docker 模式：通过 HTTP 连接
         host = settings.chroma_host
         port = settings.chroma_port
         client = chromadb.HttpClient(host=host, port=port)
-        print(f"   Chroma HTTP: {host}:{port}")
+        logger.info(f"   Chroma HTTP: {host}:{port}")
     else:
-        ***REMOVED*** 嵌入式模式：本地持久化
         persist_dir = settings.chroma_persist_dir
         os.makedirs(persist_dir, exist_ok=True)
         client = chromadb.PersistentClient(path=persist_dir)
-        print(f"   Chroma 嵌入式: {persist_dir}")
+        logger.info(f"   Chroma 嵌入式: {persist_dir}")
 
     collection = client.get_or_create_collection(
         name=collection_name,
+        embedding_function=ef,
         metadata={"hnsw:space": "cosine"},
     )
 
@@ -63,6 +159,10 @@ class ChromaVectorStore:
 
     def __init__(self, collection):
         self.collection = collection
+
+    def count(self) -> int:
+        """返回 collection 中的向量数量"""
+        return self.collection.count()
 
     def add_documents(
         self,

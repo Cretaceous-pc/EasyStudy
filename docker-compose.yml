@@ -54,7 +54,7 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./data/chroma:/chroma/chroma
+      - ./data/chroma:/data
     environment:
       IS_PERSISTENT: "TRUE"
       ANONYMIZED_TELEMETRY: "FALSE"
@@ -159,6 +159,10 @@ services:
       VECTOR_BACKEND: chroma-http
       CHROMA_HOST: chroma
       CHROMA_PORT: 8000
+      EMBEDDING_BACKEND: ${EMBEDDING_BACKEND}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL}
     volumes:
       - ./data/chroma:/app/chroma_data
     depends_on:

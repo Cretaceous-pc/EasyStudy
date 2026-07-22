@@ -20,9 +20,10 @@ langchain-openai==0.2.0
 openai==1.47.0
 websocket-client==1.8.0
 
-***REMOVED*** ── RAG（需 Visual C++ Build Tools，当前跳过）──
-***REMOVED*** chromadb==0.5.7
-***REMOVED*** sentence-transformers==3.1.0
+***REMOVED*** ── RAG ──
+***REMOVED*** chromadb 提供 HTTP 客户端连接 ChromaDB Go 服务端 (v2 API)
+chromadb>=1.0.0
+***REMOVED*** sentence-transformers==3.1.0  ***REMOVED*** 仅嵌入式模式需要，当前 HTTP 模式跳过
 
 ***REMOVED*** ── MinIO ──
 minio==7.2.9

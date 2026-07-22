@@ -12,7 +12,7 @@ RUN sed -i 's/deb.debian.org/mirrors.tencentyun.com/g' /etc/apt/sources.list.d/d
 
 ***REMOVED*** 安装系统依赖（psycopg2 需要 libpq-dev）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc \
+    libpq-dev gcc g++ \
     && rm -rf /var/lib/apt/lists/*
 
 ***REMOVED*** pip 清华镜像加速（国内构建）

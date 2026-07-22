@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     chroma_host: str = "localhost"
     chroma_port: int = 8001
 
+    ***REMOVED*** ── Embedding ──
+    embedding_backend: str = "chroma-builtin"  ***REMOVED*** chroma-builtin (ONNX 本地) | api (OpenAI 兼容接口)
+    embedding_model: str = "text-embedding-3-small"
+    embedding_api_key: str = ""  ***REMOVED*** 默认复用 deepseek_api_key
+    embedding_base_url: str = ""  ***REMOVED*** 默认复用 deepseek_base_url
+
     ***REMOVED*** ── CORS ──
     cors_allowed_origins: str = "http://localhost:5173"
 
