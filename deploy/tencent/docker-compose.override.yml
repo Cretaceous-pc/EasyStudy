@@ -1,0 +1,74 @@
+# ═══════════════════════════════════════════════════════════════
+# easyStudy 服务器部署覆盖（docker-compose.override.yml）
+#
+# Compose 自动把本文件合并到 docker-compose.yml 之上，
+# 未提及的内容（尤其是**命名卷定义**）保持原样。
+#
+# 为什么不直接用仓库里的 docker-compose.yml:
+#   开发版把数据放在 bind mount（./data/postgres 等），而服务器用命名卷
+#   （easystudy_postgres_data 等，含 20 用户 / 72 资料 / 1901 知识切片 /
+#   78MB 文件）。直接替换 compose 会让容器挂到新的空卷上，等于线上数据
+#   "消失"。故只做增量覆盖。
+#
+# 注意: Compose 对 ports 是**列表合并**而非替换。若不加 !override，
+# 会在保留原有 0.0.0.0:6379 的同时再追加 127.0.0.1:6379，造成同一端口
+# 两条绑定 → 启动失败。因此所有 ports 均使用 !override 强制替换。
+#
+# 本覆盖做三件事:
+#   1. Redis 启用 requirepass（口令来自 .env 的 REDIS_PASSWORD）
+#   2. 端口绑定收紧到 127.0.0.1（腾讯云安全组目前虽已拦，但不应单点依赖
+#      网络层）；同时消除 frontend 容器与宿主 nginx 的端口冲突
+#   3. 把 Redis 口令与 MAIL_* 注入应用服务
+# ═══════════════════════════════════════════════════════════════
+
+services:
+  # ── Redis: 启用口令 ──
+  # 原状态 requirepass 为空 = 完全无认证，且绑定 0.0.0.0:6379。
+  redis:
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD 未在 .env 中设置}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 未在 .env 中设置}
+    ports: !override
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+
+  # ── 其余中间件: 仅收紧端口绑定，不动数据卷 ──
+  postgres:
+    ports: !override
+      - "127.0.0.1:5432:5432"
+
+  chroma:
+    ports: !override
+      - "127.0.0.1:8001:8000"
+
+  minio:
+    ports: !override
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+
+  # ── 应用层: 注入 Redis 口令与邮件配置 ──
+  # 服务器原 compose 未传 REDIS_PASSWORD，而新版 application-dev.yml 会
+  # 读取它；Redis 加口令后若应用不带口令将无法连接。
+  # MAIL_* 原先也完全未传，导致"忘记密码"静默失效。
+  springboot:
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 未在 .env 中设置}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+
+  fastapi:
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 未在 .env 中设置}
+    # FastAPI 无独立鉴权（身份由 Spring 网关注入），不再发布到宿主机
+    ports: !override
+      - "127.0.0.1:8000:8000"
+
+  # ── frontend: 本部署不使用该容器 ──
+  # 线上前端是宿主 nginx 提供的静态文件（/root/easystudy/html），
+  # 该容器从未启动过。原配置发布 80:80 会与宿主 nginx 冲突；
+  # 宿主 nginx 另占用 8081/8082，故绑定到空闲的 127.0.0.1:8083，
+  # 避免将来说启动时抢占端口。
+  frontend:
+    ports: !override
+      - "127.0.0.1:8083:80"
