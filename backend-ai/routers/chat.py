@@ -59,11 +59,16 @@ async def chat_send(
     history_summary = ""
     if request.conversation_id:
         try:
-            hist = get_conversation_messages(request.conversation_id, user_id, limit=20)
+            ***REMOVED*** 取最近的 10 条作为上下文。
+            ***REMOVED*** get_conversation_messages 返回的是「最新的一页」（内部按 id DESC 取
+            ***REMOVED*** 再反转），因此这里末尾的 10 条就是最近 10 条；
+            ***REMOVED*** 修复前该函数返回的是最旧的一页，注释与实际行为不符，模型拿到的是
+            ***REMOVED*** 对话开头的旧上下文。
+            hist = get_conversation_messages(request.conversation_id, user_id, limit=10)
             msgs = hist.get("items", [])
             if msgs:
                 lines = []
-                for m in msgs[-10:]:  ***REMOVED*** 最近10条
+                for m in msgs[-10:]:
                     role_label = "用户" if m["role"] == "user" else "助手"
                     lines.append(f"[{role_label}]: {m['content'][:200]}")
                 history_summary = "\n".join(lines)

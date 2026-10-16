@@ -20,7 +20,7 @@ def _get_pool() -> SimpleConnectionPool:
         settings = get_settings()
         _pool = SimpleConnectionPool(
             minconn=1,
-            maxconn=5,
+            maxconn=10,
             host=settings.db_host,
             port=settings.db_port,
             dbname=settings.db_name,
@@ -32,19 +32,61 @@ def _get_pool() -> SimpleConnectionPool:
     return _pool
 
 
+def _check_alive(conn) -> bool:
+    """检查连接是否仍然可用。
+
+    连接池不会自动剔除失效连接：Postgres 重启后池中残留的死连接会被
+    反复取出并失败，导致进程在重启前永久不可用（InterfaceError: connection
+    already closed）。这里在取用时做一次轻量探活，失效则重建。
+    """
+    try:
+        if conn.closed:
+            return False
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+        return True
+    except Exception:
+        return False
+
+
 @contextmanager
 def get_connection():
-    """获取数据库连接（上下文管理器，自动归还连接池）"""
+    """获取数据库连接（上下文管理器，自动归还连接池）
+
+    取连接时带超时：原实现直接 pool.getconn()，池满时无限阻塞。
+    SSE 长连接期间会一直占用连接，10 个并发请求即可耗尽池并让后续请求
+    永久挂起（而不是快速失败）。
+    """
     pool = _get_pool()
-    conn = pool.getconn()
     try:
+        conn = pool.getconn()
+    except Exception as e:
+        ***REMOVED*** SimpleConnectionPool 池满时抛 PoolError
+        logger.error("Database connection pool exhausted: %s", e)
+        raise RuntimeError("数据库连接繁忙，请稍后重试") from e
+
+    try:
+        ***REMOVED*** 取到失效连接则丢弃重建一次
+        if not _check_alive(conn):
+            logger.warning("Discarding dead DB connection, retrying once")
+            try:
+                pool.putconn(conn, close=True)
+            except Exception:
+                pass
+            conn = pool.getconn()
         yield conn
         conn.commit()
     except Exception:
-        conn.rollback()
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         raise
     finally:
-        pool.putconn(conn)
+        try:
+            pool.putconn(conn)
+        except Exception:
+            pass
 
 
 def check_enrollment(student_id: int, course_id: int) -> bool:
@@ -683,14 +725,19 @@ def get_conversation_messages(
             where = " AND ".join(conditions)
             params.append(limit + 1)  ***REMOVED*** 多取一条判断 has_more
 
+            ***REMOVED*** 必须按 id DESC 取「最新的一页」再反转。
+            ***REMOVED*** 原实现是 ORDER BY id ASC + LIMIT，返回的是对话最开头的窗口；
+            ***REMOVED*** 前端用返回结果里最旧的 id 作为下一页 before_id，会得到空结果，
+            ***REMOVED*** 因此永远看不到最近的消息（实测表现为"历史消息停在最早几条"）。
             cur.execute(
                 f"SELECT id, role, content, metadata, created_at FROM messages "
-                f"WHERE {where} ORDER BY id ASC LIMIT %s",
+                f"WHERE {where} ORDER BY id DESC LIMIT %s",
                 params,
             )
             rows = cur.fetchall()
             has_more = len(rows) > limit
             rows = rows[:limit]
+            rows.reverse()  ***REMOVED*** 反转回时间正序，供前端按顺序渲染
 
             items = []
             for r in rows:

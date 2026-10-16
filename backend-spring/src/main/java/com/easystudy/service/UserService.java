@@ -1,5 +1,6 @@
 package com.easystudy.service;
 
+import com.easystudy.dto.PageParams;
 import com.easystudy.dto.PageResponse;
 import com.easystudy.dto.UserDto;
 import com.easystudy.exception.BusinessException;
@@ -28,54 +29,29 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public PageResponse<UserDto> listUsers(int page, int pageSize, String role, String keyword) {
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        int safePage = PageParams.page(page);
+        int safePageSize = PageParams.pageSize(pageSize);
+        Pageable pageable = PageRequest.of(safePage - 1, safePageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<User> users;
 
-        if (keyword != null && !keyword.isBlank()) {
+        if (role != null && !role.isBlank()) {
+            // 角色筛选下推到数据库：原实现在内存里只过滤"当前页"，
+            // 却返回未过滤的 total，既漏数据又给出错误的分页统计。
+            String kw = (keyword != null && !keyword.isBlank()) ? keyword : null;
+            users = userRepository.findByRoleAndKeyword(role, kw, pageable);
+        } else if (keyword != null && !keyword.isBlank()) {
             users = userRepository.findByUsernameContainingOrDisplayNameContaining(
                     keyword, keyword, pageable);
         } else {
             users = userRepository.findAll(pageable);
         }
 
-        Page<UserDto> dtoPage = users.map(user -> {
-            List<String> roles = userRoleRepository.findRoleNamesByUserId(user.getId());
-            return UserDto.builder()
-                    .userId(user.getId())
-                    .username(user.getUsername())
-                    .displayName(user.getDisplayName())
-                    .email(user.getEmail())
-                    .avatarUrl(user.getAvatarUrl())
-                    .roles(roles)
-                    .isEnabled(user.getIsEnabled())
-                    .createdAt(user.getCreatedAt())
-                    .build();
-        });
-
-        // 如果指定了角色筛选（纯内存过滤，数据量不大时可用）
-        if (role != null && !role.isBlank()) {
-            var filtered = dtoPage.getContent().stream()
-                    .filter(u -> u.getRoles() != null && u.getRoles().contains(role))
-                    .toList();
-            return PageResponse.of(filtered, dtoPage.getTotalElements(), page, pageSize);
-        }
-
+        Page<UserDto> dtoPage = users.map(this::toUserDto);
         return PageResponse.of(dtoPage);
     }
 
-    @Transactional
-    public UserDto toggleUserStatus(Long userId, boolean isEnabled) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> BusinessException.notFound("用户"));
-
-        user.setIsEnabled(isEnabled);
-        userRepository.save(user);
-
+    private UserDto toUserDto(User user) {
         List<String> roles = userRoleRepository.findRoleNamesByUserId(user.getId());
-        log.info("User {} {}: id={}, username={}",
-                isEnabled ? "enabled" : "disabled", isEnabled ? "启用" : "禁用",
-                userId, user.getUsername());
-
         return UserDto.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
@@ -86,5 +62,17 @@ public class UserService {
                 .isEnabled(user.getIsEnabled())
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    @Transactional
+    public UserDto toggleUserStatus(Long userId, boolean isEnabled) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> BusinessException.notFound("用户"));
+
+        user.setIsEnabled(isEnabled);
+        userRepository.save(user);
+
+        log.info("User status changed: id={}, enabled={}", userId, isEnabled);
+        return toUserDto(user);
     }
 }

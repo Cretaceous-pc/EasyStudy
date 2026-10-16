@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConfigProvider } from 'antd'
 import App from './App'
+import ErrorBoundary from './components/shared/ErrorBoundary'
 import './index.css'
 
 const theme = {
@@ -37,8 +38,11 @@ const theme = {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ConfigProvider theme={theme}>
-      <App />
-    </ConfigProvider>
+    {/* 顶层错误边界：原先没有它，任何渲染期异常都会直接白屏且无提示 */}
+    <ErrorBoundary>
+      <ConfigProvider theme={theme}>
+        <App />
+      </ConfigProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

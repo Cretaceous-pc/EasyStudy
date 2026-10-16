@@ -39,13 +39,35 @@ public class MaterialService {
     private static final String BUCKET_NAME = "materials";
     private static final List<String> ALLOWED_EXTENSIONS = List.of("pdf", "md", "txt");
     private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    /** 与 DDL 的 SMALLINT 级别字段保持一致（course_materials.chapter/section 为 VARCHAR(64)） */
+    private static final int MAX_KEY_SEGMENT_LENGTH = 64;
+    /** 与 DDL 的 course_materials.title VARCHAR(256) 对齐 */
+    private static final int MAX_TITLE_LENGTH = 256;
+    private static final java.util.regex.Pattern KEY_SEGMENT_PATTERN =
+            java.util.regex.Pattern.compile("^[0-9A-Za-z_\\-\\u4e00-\\u9fa5]*$");
+
+    /** 校验会被拼进 MinIO 对象键的字段 */
+    private void validateKeySegment(String field, String value) {
+        if (value == null || value.isBlank()) return;
+        if (value.length() > MAX_KEY_SEGMENT_LENGTH) {
+            throw new BusinessException(40001, field + " 长度不能超过 " + MAX_KEY_SEGMENT_LENGTH + " 字符",
+                    HttpStatus.BAD_REQUEST);
+        }
+        if (!KEY_SEGMENT_PATTERN.matcher(value).matches()) {
+            throw new BusinessException(40001, field + " 只能包含字母、数字、下划线、连字符或中文",
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
 
     @Transactional
     public MaterialDto uploadMaterial(Long courseId, MultipartFile file, String title,
                                        String chapter, String section, Long uploaderId) {
-        // 验证课程存在
-        courseRepository.findById(courseId)
-                .orElseThrow(() -> BusinessException.notFound("课程"));
+        // 必须是该课程的教师（或管理员）才能上传。
+        // 原实现只校验课程存在，任何教师都能往别人的课程投放内容
+        // （删除操作反而有归属校验，两者不一致）。
+        courseRepository.findByIdAndTeacherId(courseId, uploaderId)
+                .orElseThrow(() -> new BusinessException(40102,
+                        "只能向自己负责的课程上传资料", HttpStatus.FORBIDDEN));
 
         // 验证文件
         String originalFilename = file.getOriginalFilename();
@@ -60,6 +82,15 @@ public class MaterialService {
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new BusinessException(40001, "文件大小不能超过 20MB", HttpStatus.BAD_REQUEST);
+        }
+
+        // chapter/section 会被拼进 MinIO 对象键，且列宽在 DDL 中是 VARCHAR(64)。
+        // 必须在此校验：既避免超长导致 DB 报错回滚后留下孤儿对象，
+        // 也避免路径分隔符让对象逃出 course-N/ 命名空间。
+        validateKeySegment("chapter", chapter);
+        validateKeySegment("section", section);
+        if (title != null && title.length() > MAX_TITLE_LENGTH) {
+            throw new BusinessException(40001, "标题长度不能超过 " + MAX_TITLE_LENGTH + " 字符", HttpStatus.BAD_REQUEST);
         }
 
         // 生成 MinIO 对象路径
@@ -110,12 +141,31 @@ public class MaterialService {
     }
 
     @Transactional(readOnly = true)
-    public List<MaterialDto> listMaterials(Long courseId, String materialType, String chapter) {
+    public List<MaterialDto> listMaterials(Long courseId, String materialType, String chapter, Long userId) {
         courseRepository.findById(courseId)
                 .orElseThrow(() -> BusinessException.notFound("课程"));
 
+        // 资料列表会返回 MinIO 对象键（fileUrl），因此必须限定为
+        // "已选课的学生" 或 "该课程的教师"，否则任何登录用户都能遍历
+        // 全部课程的资料清单，进而配合文件代理下载他人课程资料。
+        if (!canAccessCourse(courseId, userId)) {
+            throw new BusinessException(40102, "无权访问：未选修该课程", HttpStatus.FORBIDDEN);
+        }
+
         List<CourseMaterial> materials = materialRepository.findByFilters(courseId, materialType, chapter);
         return materials.stream().map(this::toMaterialDto).collect(Collectors.toList());
+    }
+
+    /**
+     * 课程访问权限：学生需已选课，教师需为课程负责人。
+     * 供资料列表 / 文件代理 / 内容读取共用。
+     */
+    @Transactional(readOnly = true)
+    public boolean canAccessCourse(Long courseId, Long userId) {
+        if (enrollmentRepository.existsByCourseIdAndStudentId(courseId, userId)) {
+            return true;
+        }
+        return courseRepository.findByIdAndTeacherId(courseId, userId).isPresent();
     }
 
     @Transactional(readOnly = true)

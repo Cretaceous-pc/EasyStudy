@@ -49,7 +49,11 @@ public class SecurityConfig {
                     "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/courses/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/materials/files/**").permitAll()
+                // 注意: /api/materials/files/** 不再 permitAll。
+                // 该端点直接按请求 URI 取 MinIO 对象键且不做任何归属校验，
+                // 匿名即可读取 materials 桶内任意对象；而 GET /api/materials
+                // 会把对象键返回给任何登录用户，两者组合等于任意人可下载
+                // 全部课程资料。现要求认证，并在控制器内校验课程归属。
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
@@ -82,7 +86,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        // trim：CORS_ALLOWED_ORIGINS 支持逗号分隔（如 "http://a, http://b"），
+        // 不加 trim 时第二项会带上前导空格，永远匹配不上浏览器 Origin。
+        config.setAllowedOrigins(
+            java.util.Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList()
+        );
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

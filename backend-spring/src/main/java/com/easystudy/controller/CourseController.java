@@ -31,8 +31,11 @@ public class CourseController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<CourseDto>>> listCourses(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int pageSize,
+            // 显式声明 snake_case 参数名：前端统一发送 page/page_size。
+            // 依赖隐式参数名时需要 -parameters 且与 Java 变量名一致，
+            // 否则 page_size 会被静默忽略并回落到默认值。
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "page_size", defaultValue = "20") int pageSize,
             @RequestParam(required = false) String subject,
             @RequestParam(required = false) String status) {
         ApiResponse<PageResponse<CourseDto>> response = courseService.listCourses(subject, status, page, pageSize);
@@ -89,9 +92,14 @@ public class CourseController {
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<EnrollmentDto>>> listCourseStudents(
             @PathVariable Long courseId,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "50") int pageSize) {
-        ApiResponse<PageResponse<EnrollmentDto>> response = courseService.listCourseStudents(courseId, page, pageSize);
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "page_size", defaultValue = "50") int pageSize,
+            Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        ApiResponse<PageResponse<EnrollmentDto>> response =
+                courseService.listCourseStudents(courseId, userId, isAdmin, page, pageSize);
         return ResponseEntity.ok(response);
     }
 }

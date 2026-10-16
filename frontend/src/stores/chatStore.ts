@@ -26,6 +26,8 @@ interface ChatStore {
   setIsStreaming: (streaming: boolean) => void;
   finalizeStreamingMessage: () => void;
   clearStreaming: () => void;
+  /** 登出时清空全部会话状态，避免跨用户数据残留 */
+  resetAll: () => void;
 
   // 异步 API action
   fetchConversations: (params?: { course_id?: number; page?: number; page_size?: number }) => Promise<void>;
@@ -58,6 +60,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setCurrentConversation: (id) => set({ currentConversationId: id }),
   setCurrentMaterialId: (id) => set({ currentMaterialId: id }),
   setMessages: (messages) => set({ messages }),
+
+  resetAll: () =>
+    set({
+      conversations: [],
+      currentConversationId: null,
+      currentMaterialId: null,
+      messages: [],
+      isStreaming: false,
+      streamingContent: '',
+      error: null,
+    }),
 
   addMessage: (message) =>
     set((s) => ({ messages: [...s.messages, message] })),

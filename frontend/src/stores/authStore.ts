@@ -22,6 +22,56 @@ function getInitialUser(): UserInfo | null {
   }
 }
 
+/**
+ * 清空所有"与当前用户绑定"的 store。
+ *
+ * 原实现 logout 只清 authStore，其余 store（chat/course/resource/profile/
+ * teacher）都是模块级单例且从不清空。同一浏览器内 A 退出、B 登录后，
+ * 在 B 首次请求返回之前，界面会渲染出 A 的消息、课程与资源 —— 跨用户数据泄漏。
+ *
+ * 这里用动态 import 避免 store 之间的循环依赖（authStore 被 api.ts 引用，
+ * 而各 store 又通过 service 间接引用 api.ts）。
+ * layoutStore 故意不重置：它只保存界面偏好（当前视图、面板开关），不含用户数据。
+ */
+export function resetUserScopedStores() {
+  void Promise.all([
+    import('./chatStore'),
+    import('./courseStore'),
+    import('./resourceStore'),
+    import('./profileStore'),
+    import('./teacherStore'),
+    import('./learningPathStore'),
+  ])
+    .then(([chat, course, resource, profile, teacher, learningPath]) => {
+      chat.useChatStore.getState().resetAll?.();
+      course.useCourseStore.setState({
+        enrolledCourses: [],
+        allCourses: [],
+        currentCourse: null,
+        activeCourseId: null,
+        error: null,
+      });
+      resource.useResourceStore.getState().clear?.();
+      profile.useProfileStore.setState({
+        profile: null,
+        history: [],
+        editingDimensions: [],
+        isEditing: false,
+        error: null,
+      });
+      teacher.useTeacherStore.setState({
+        myCourses: [],
+        courseMaterials: [],
+        selectedCourseId: null,
+        error: null,
+      });
+      learningPath.useLearningPathStore.setState({ path: null, selectedNodeId: null });
+    })
+    .catch((e) => {
+      console.warn('[authStore] 重置用户级 store 失败:', e);
+    });
+}
+
 interface AuthStore {
   token: string | null;
   userInfo: UserInfo | null;
@@ -54,6 +104,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     set({ token: null, userInfo: null, isAuthenticated: false, isChecking: false });
+    resetUserScopedStores();
   },
 
   setUserInfo: (user) => {

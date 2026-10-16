@@ -1,6 +1,7 @@
 package com.easystudy.service;
 
 import com.easystudy.dto.*;
+import com.easystudy.dto.PageParams;
 import com.easystudy.exception.BusinessException;
 import com.easystudy.model.Course;
 import com.easystudy.model.CourseEnrollment;
@@ -51,7 +52,11 @@ public class CourseService {
     @Transactional(readOnly = true)
     public ApiResponse<PageResponse<CourseDto>> listCourses(String subject, String status,
                                                             int page, int pageSize) {
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        // 钳制分页参数：page<1 会让 PageRequest 抛异常(500)，
+        // pageSize 无上界则会被用来一次性拉取整表。
+        int safePage = PageParams.page(page);
+        int safePageSize = PageParams.pageSize(pageSize);
+        Pageable pageable = PageRequest.of(safePage - 1, safePageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Course> courses = courseRepository.findByFilters(subject, status, pageable);
 
         Page<CourseDto> dtoPage = courses.map(this::toCourseDto);
@@ -119,11 +124,21 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<PageResponse<EnrollmentDto>> listCourseStudents(Long courseId, int page, int pageSize) {
-        courseRepository.findById(courseId)
+    public ApiResponse<PageResponse<EnrollmentDto>> listCourseStudents(
+            Long courseId, Long requesterId, boolean isAdmin, int page, int pageSize) {
+        Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> BusinessException.notFound("课程"));
 
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.DESC, "enrolledAt"));
+        // 归属校验：原实现只校验课程存在，任何教师都能拉取其他教师课程的
+        // 学生名单（含 userId 与 displayName）。管理员放行。
+        boolean isOwner = course.getTeacherId() != null && course.getTeacherId().equals(requesterId);
+        if (!isAdmin && !isOwner) {
+            throw new BusinessException(40102, "只能查看自己课程的学生名单", HttpStatus.FORBIDDEN);
+        }
+
+        int safePage = PageParams.page(page);
+        int safePageSize = PageParams.pageSize(pageSize);
+        Pageable pageable = PageRequest.of(safePage - 1, safePageSize, Sort.by(Sort.Direction.DESC, "enrolledAt"));
         Page<CourseEnrollment> enrollments = enrollmentRepository.findByCourseId(courseId, pageable);
 
         Page<EnrollmentDto> dtoPage = enrollments.map(e -> {

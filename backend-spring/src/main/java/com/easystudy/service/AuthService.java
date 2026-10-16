@@ -45,9 +45,14 @@ public class AuthService {
             throw BusinessException.usernameExists();
         }
 
+        // 邮箱统一规范化后存储与比较。
+        // 原实现注册时原样存、忘记密码/重置时先转小写再查，
+        // 导致任何含大写字母的邮箱（如 Li.Ming@Example.com）在重置流程中
+        // 被判为"未注册"，密码永远无法通过邮件找回。
+        String email = normalizeEmail(request.getEmail());
+
         // 检查邮箱是否已存在
-        if (request.getEmail() != null && !request.getEmail().isBlank()
-                && userRepository.existsByEmail(request.getEmail())) {
+        if (email != null && userRepository.existsByEmail(email)) {
             throw new BusinessException(40001, "邮箱已被注册", HttpStatus.BAD_REQUEST);
         }
 
@@ -59,7 +64,7 @@ public class AuthService {
         User user = User.builder()
                 .username(request.getUsername())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .email(request.getEmail())
+                .email(email)
                 .displayName(request.getDisplayName())
                 .isEnabled(true)
                 .build();
@@ -143,47 +148,92 @@ public class AuthService {
     private static final long CODE_TTL_MINUTES = 5;
     private static final String RATE_LIMIT_PREFIX = "reset:ratelimit:";
     private static final long RATE_LIMIT_SECONDS = 60;
+    /** 验证码最大尝试次数，超过即作废该验证码 */
+    private static final String ATTEMPT_PREFIX = "reset:attempts:";
+    private static final int MAX_CODE_ATTEMPTS = 5;
+    /** 刷新时容忍的过期窗口（秒）：仅用于时钟偏移，不构成续期机制 */
+    private static final long REFRESH_GRACE_SECONDS = 5 * 60;
+
+    /**
+     * 邮箱规范化：trim + 小写。
+     * 全流程（注册/登录/忘记密码/重置）必须使用同一套规则，
+     * 否则会出现"注册成功但无法找回密码"这类不一致。
+     */
+    private static String normalizeEmail(String email) {
+        if (email == null) return null;
+        String trimmed = email.trim();
+        return trimmed.isEmpty() ? null : trimmed.toLowerCase(java.util.Locale.ROOT);
+    }
 
     public void forgotPassword(ForgotPasswordRequest request) {
-        String email = request.getEmail().trim().toLowerCase();
+        String email = normalizeEmail(request.getEmail());
+        if (email == null) {
+            throw BusinessException.emailNotRegistered();
+        }
 
         // 检查邮箱是否已注册
         if (!userRepository.existsByEmail(email)) {
             throw BusinessException.emailNotRegistered();
         }
 
-        // 频率限制：同一邮箱 60 秒内只能请求一次
+        // 频率限制：同一邮箱 60 秒内只能请求一次。
+        // 用 setIfAbsent 原子占位，替代原先"先 hasKey 再 set"的 TOCTOU 写法
+        // （并发请求会同时通过检查并各发一封邮件）。
         String rateLimitKey = RATE_LIMIT_PREFIX + email;
-        Boolean isLimited = redisTemplate.hasKey(rateLimitKey);
-        if (Boolean.TRUE.equals(isLimited)) {
+        Boolean acquired = redisTemplate.opsForValue()
+                .setIfAbsent(rateLimitKey, "1", Duration.ofSeconds(RATE_LIMIT_SECONDS));
+        if (!Boolean.TRUE.equals(acquired)) {
             throw BusinessException.tooManyRequests();
         }
 
         // 生成 6 位验证码
         String code = emailService.generateCode();
 
-        // 存入 Redis，5 分钟过期
+        try {
+            // 发送邮件；失败则回滚已写入的状态，避免"看起来失败却已被限流"
+            emailService.sendVerificationCode(email, code);
+        } catch (RuntimeException e) {
+            redisTemplate.delete(rateLimitKey);
+            throw e;
+        }
+
+        // 仅在发送成功后写入验证码与尝试计数
         String codeKey = RESET_CODE_PREFIX + email;
         redisTemplate.opsForValue().set(codeKey, code, Duration.ofMinutes(CODE_TTL_MINUTES));
+        redisTemplate.delete(ATTEMPT_PREFIX + email);
 
-        // 设置频率限制 key，60 秒过期
-        redisTemplate.opsForValue().set(rateLimitKey, "1", Duration.ofSeconds(RATE_LIMIT_SECONDS));
-
-        // 发送邮件
-        emailService.sendVerificationCode(email, code);
-
-        log.info("Password reset code sent to email: {}", email);
+        log.info("Password reset code sent to user (email 已脱敏, 长度={})", email.length());
     }
 
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        String email = request.getEmail().trim().toLowerCase();
+        String email = normalizeEmail(request.getEmail());
         String inputCode = request.getCode().trim();
         String newPassword = request.getNewPassword();
+
+        if (email == null) {
+            throw BusinessException.emailNotRegistered();
+        }
 
         // 检查邮箱是否已注册
         User user = userRepository.findByEmail(email)
                 .orElseThrow(BusinessException::emailNotRegistered);
+
+        // 尝试次数限制：验证码只有 6 位十进制（约 90 万种），而校验接口
+        // 原本没有任何失败计数，5 分钟 TTL 内足以被穷举。
+        String attemptKey = ATTEMPT_PREFIX + email;
+        String attemptsRaw = redisTemplate.opsForValue().get(attemptKey);
+        int attempts = 0;
+        if (attemptsRaw != null) {
+            try {
+                attempts = Integer.parseInt(attemptsRaw);
+            } catch (NumberFormatException ignored) {
+                attempts = 0;
+            }
+        }
+        if (attempts >= MAX_CODE_ATTEMPTS) {
+            throw BusinessException.tooManyRequests();
+        }
 
         // 从 Redis 获取验证码
         String codeKey = RESET_CODE_PREFIX + email;
@@ -191,6 +241,15 @@ public class AuthService {
 
         // 验证码不存在或过期
         if (storedCode == null || !storedCode.equals(inputCode)) {
+            // 累加失败次数，并与验证码同寿命（5 分钟）
+            Long used = redisTemplate.opsForValue().increment(attemptKey);
+            if (used != null && used == 1L) {
+                redisTemplate.expire(attemptKey, Duration.ofMinutes(CODE_TTL_MINUTES));
+            }
+            if (used != null && used >= MAX_CODE_ATTEMPTS) {
+                // 达到上限即作废验证码，强制重新发起
+                redisTemplate.delete(codeKey);
+            }
             throw BusinessException.invalidVerificationCode();
         }
 
@@ -198,16 +257,20 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // 删除验证码（一次性使用，防止重放）
+        // 删除验证码与计数（一次性使用，防止重放）
         redisTemplate.delete(codeKey);
+        redisTemplate.delete(attemptKey);
 
-        log.info("Password reset successfully for user id={}, email={}", user.getId(), email);
+        log.info("Password reset successfully for user id={}", user.getId());
     }
 
     @Transactional(readOnly = true)
     public ApiResponse<AuthResponse> refreshToken(String oldToken) {
-        // 验证旧 Token：在过期后 7 天宽限期内仍允许刷新
-        var claims = jwtUtil.validateForRefresh(oldToken, 7 * 24 * 3600);
+        // 仅容忍时钟偏移级别的过期窗口（5 分钟）。
+        // 原实现为 7 天，配合"刷新即签发新的 24h token"且无任何吊销机制，
+        // 构成事实上的永久会话：只要每 7 天刷新一次，被盗 token 永不失效，
+        // 改密码也无法驱逐。
+        var claims = jwtUtil.validateForRefresh(oldToken, REFRESH_GRACE_SECONDS);
         if (claims == null) {
             throw new BusinessException(40103, "Token 无效或已超过刷新有效期", HttpStatus.UNAUTHORIZED);
         }

@@ -93,6 +93,13 @@ def get_settings() -> Settings:
     settings = Settings()
     missing = settings.validate_secrets()
     if missing:
-        print(f"⚠️  警告: 以下环境变量未配置: {', '.join(missing)}")
-        print(f"   请在 .env 文件中设置这些变量后再启动生产环境")
+        ***REMOVED*** 关键密钥缺失必须直接失败，而不是"打印警告后继续跑"。
+        ***REMOVED*** 尤其是 JWT_SECRET：为空时 deps.py 会以空串作为 HMAC 密钥验签，
+        ***REMOVED*** 等于任何攻击者都能用空密钥自行签发 token。
+        ***REMOVED*** （deps.py 已单独拒绝空密钥，这里在启动阶段就暴露问题。）
+        raise RuntimeError(
+            "以下必需的环境变量未配置，服务拒绝启动: "
+            + ", ".join(missing)
+            + "。请检查 .env 文件（参考 .env.example）。"
+        )
     return settings
