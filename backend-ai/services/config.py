@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     ***REMOVED*** ── Redis ──
     redis_host: str = "localhost"
     redis_port: int = 6379
+    redis_password: str = ""  ***REMOVED*** 与 compose 的 --requirepass 对应
 
     ***REMOVED*** ── MinIO ──
     minio_endpoint: str = "localhost:9000"

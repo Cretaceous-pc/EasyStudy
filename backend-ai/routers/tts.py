@@ -43,15 +43,22 @@ class TTSSynthesizeRequest(BaseModel):
 
 ***REMOVED*** ── Redis 辅助 ──
 
+_redis_client = None
+
+
 def _get_redis():
-    """获取 Redis 连接"""
-    import redis
-    return redis.Redis(
-        host=settings.redis_host,
-        port=settings.redis_port,
-        decode_responses=True,
-        socket_connect_timeout=3,
-    )
+    """获取 Redis 连接（模块级复用，避免每请求新建连接导致连接堆积）"""
+    global _redis_client
+    if _redis_client is None:
+        import redis
+        _redis_client = redis.Redis(
+            host=settings.redis_host,
+            port=settings.redis_port,
+            password=settings.redis_password or None,
+            decode_responses=True,
+            socket_connect_timeout=3,
+        )
+    return _redis_client
 
 
 def _text_md5(text: str) -> str:

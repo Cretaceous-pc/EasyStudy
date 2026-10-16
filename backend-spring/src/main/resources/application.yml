@@ -16,11 +16,18 @@ spring:
 
   servlet:
     multipart:
+      ***REMOVED*** 单文件 20MB；请求上限留出 multipart 边界与其它字段的余量，
+      ***REMOVED*** 否则恰好 20MB 的文件会因整体请求超限而失败。
+      ***REMOVED*** 三层必须对齐: nginx client_max_body_size=21m / 此处 / MaterialService.MAX_FILE_SIZE
       max-file-size: 20MB
-      max-request-size: 20MB
+      max-request-size: 21MB
 
   jackson:
     property-naming-strategy: SNAKE_CASE  ***REMOVED*** 统一 snake_case，匹配接口契约文档
+
+  ***REMOVED*** 注意: property-naming-strategy 只影响 JSON 序列化，
+  ***REMOVED*** 不影响 @RequestParam 绑定 —— 后者依赖 -parameters 保留的 Java 参数名。
+  ***REMOVED*** 因此查询参数要么写 snake_case 名字，要么与 Java 参数名一致（见各 Controller）。
 
   mail:
     host: ${MAIL_HOST:}

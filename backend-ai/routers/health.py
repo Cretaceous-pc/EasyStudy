@@ -38,6 +38,7 @@ async def health_check(user_id: int = Depends(get_current_user_id)):
         r = redis_lib.Redis(
             host=settings.redis_host,
             port=settings.redis_port,
+            password=settings.redis_password or None,
             socket_connect_timeout=3,
         )
         r.ping()
