@@ -13,7 +13,10 @@ import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
 import java.io.BufferedReader;
@@ -56,6 +59,52 @@ public class AiProxyController {
     private static String bearerOf(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         return (header != null && header.startsWith("Bearer ")) ? header : null;
+    }
+
+    /**
+     * 上游返回非 2xx 时的信封包装。
+     *
+     * FastAPI 的错误体形如 {"detail": "..."}，没有 code/message 字段。
+     * 这里把 HTTP 状态码映射为业务 code，并把 detail 作为 message 透出，
+     * 使前端拿到的是「非 0 code + 真实原因」，而不是被误判成功的 code=0。
+     */
+    private String wrapErrorJsonToApiResponse(String rawJson, org.springframework.http.HttpStatusCode status) {
+        String detail = null;
+        try {
+            com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(rawJson);
+            if (node.hasNonNull("detail")) {
+                detail = node.get("detail").asText();
+            } else if (node.hasNonNull("message")) {
+                detail = node.get("message").asText();
+            }
+        } catch (Exception e) {
+            log.debug("Failed to parse upstream error body: {}", e.getMessage());
+        }
+
+        int code;
+        if (status.value() == 401) {
+            code = 40101;
+        } else if (status.value() == 403) {
+            code = 40102;
+        } else if (status.value() == 404) {
+            code = 40400;
+        } else if (status.is4xxClientError()) {
+            code = 40000 + status.value() % 100;
+        } else {
+            code = 50001;
+        }
+
+        ApiResponse<Void> wrapped = ApiResponse.<Void>builder()
+                .code(code)
+                .message(detail != null ? detail : ("AI 服务返回 " + status.value()))
+                .timestamp(java.time.OffsetDateTime.now())
+                .build();
+        try {
+            return objectMapper.writeValueAsString(wrapped);
+        } catch (Exception e) {
+            log.warn("Failed to serialize wrapped error: {}", e.getMessage());
+            return rawJson;
+        }
     }
 
     /**
@@ -124,6 +173,39 @@ public class AiProxyController {
     public void validate() {
         assertInternalUrl(fastapiUrl);
         log.info("FastAPI proxy URL validated: {}", fastapiUrl);
+    }
+
+    /**
+     * 构造转发到 FastAPI 用的 RestTemplate。
+     *
+     * 关键点: 关闭默认的 4xx/5xx 抛异常行为。
+     * RestTemplate 默认在收到 4xx/5xx 时抛 HttpClientErrorException /
+     * HttpServerErrorException，会被本类的 catch 兜住并转成
+     * 502 + code 50001「AI 服务请求失败」—— 于是上游的 403（未选课）、
+     * 404（资源不存在）等**业务语义全部丢失**，前端无法区分"没权限"
+     * 与"服务挂了"。实测: /api/ai/resources?course_id=4 上游返回 403，
+     * 经代理后变成 502。
+     *
+     * 这里改为不抛异常，让 ResponseEntity 原样带回上游状态码，
+     * 由调用处按原状态码返回给客户端。
+     */
+    private RestTemplate newInternalRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(30000);
+        RestTemplate restTemplate = new RestTemplate(factory);
+        restTemplate.setErrorHandler(new ResponseErrorHandler() {
+            @Override
+            public boolean hasError(ClientHttpResponse response) {
+                return false;   // 任何状态码都视为"正常响应"，交调用方处理
+            }
+
+            @Override
+            public void handleError(ClientHttpResponse response) {
+                // hasError 恒为 false，不会走到这里
+            }
+        });
+        return restTemplate;
     }
 
     /**
@@ -337,11 +419,7 @@ public class AiProxyController {
 
         try {
             // 添加连接/读超时（防止请求挂起）
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.setRequestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {{
-                setConnectTimeout(Duration.ofSeconds(5));
-                setReadTimeout(Duration.ofSeconds(30));
-            }});
+            RestTemplate restTemplate = newInternalRestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-User-Id", String.valueOf(userId));
             headers.set("X-User-Role", userRole);
@@ -381,9 +459,20 @@ public class AiProxyController {
                         .body(response.getBody());
             }
 
+            String raw = new String(response.getBody() != null ? response.getBody() : new byte[0]);
+            // 上游非 2xx 时绝不能包成 {code:0, message:"ok"} ——
+            // 前端只按信封里的 code 判断成败，包成 0 会把"未选课"(403)、
+            // "资源不存在"(404) 显示为成功，且丢掉真实原因。
+            // 非 2xx 一律原样透传上游响应体与状态码。
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                return ResponseEntity.status(response.getStatusCode())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(wrapErrorJsonToApiResponse(raw, response.getStatusCode()));
+            }
+
             return ResponseEntity.status(response.getStatusCode())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(wrapRawJsonToApiResponse(new String(response.getBody() != null ? response.getBody() : new byte[0])));
+                    .body(wrapRawJsonToApiResponse(raw));
         } catch (Exception e) {
             log.error("GET proxy error: {}", e.getMessage(), e);
             throw new BusinessException(50001, "AI 服务请求失败", HttpStatus.BAD_GATEWAY);
@@ -412,11 +501,7 @@ public class AiProxyController {
         log.debug("Proxying PUT to FastAPI: {} (userId={}, role={})", targetUrl, userId, userRole);
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.setRequestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {{
-                setConnectTimeout(Duration.ofSeconds(5));
-                setReadTimeout(Duration.ofSeconds(30));
-            }});
+            RestTemplate restTemplate = newInternalRestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-User-Id", String.valueOf(userId));
             headers.set("X-User-Role", userRole);
@@ -476,11 +561,7 @@ public class AiProxyController {
         }
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.setRequestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {{
-                setConnectTimeout(Duration.ofSeconds(5));
-                setReadTimeout(Duration.ofSeconds(30));
-            }});
+            RestTemplate restTemplate = newInternalRestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-User-Id", String.valueOf(userId));
             headers.set("X-User-Role", userRole);

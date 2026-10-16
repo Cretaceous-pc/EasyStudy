@@ -62,9 +62,18 @@ services:
 
   # ── 向量数据库 ──
   chroma:
-    # 锁具体版本，不用 :latest —— 该镜像已从 python 基线改为 Rust 二进制，
-    # :latest 漂移会静默改变镜像内容（历史教训：健康检查因此失效）。
-    image: chromadb/chroma:1.0.0
+    # 沿用 :latest —— 与现有数据同源。
+    #
+    # 曾尝试锁定到 chromadb/chroma:1.0.0 以求可复现，实测**不可行**:
+    # 现有 data/chroma 由 :latest（更新的 schema）写入，1.0.0 的 Rust 二进制
+    # 读取时直接 panic:
+    #     thread 'main' panicked at rust/sqlite/src/db.rs:157:42:
+    #     range start index 10 out of range for slice of length 9
+    # 即服务无法启动，向量检索（2222 条知识切片）全部失效。
+    #
+    # 结论: 向量库镜像版本与磁盘数据强耦合，**不可单独钉版本**。
+    # 若要升级/降级，必须同时迁移数据（重新向量化），见 scripts/reindex_chunks.py。
+    image: ${CHROMA_IMAGE:-chromadb/chroma:latest}
     container_name: easystudy-chroma
     ports:
       - "${BIND_ADDR:-127.0.0.1}:8001:8000"
@@ -82,7 +91,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
     restart: unless-stopped
 
   qdrant:
@@ -99,16 +108,23 @@ services:
 
   # ── 文件存储 ──
   minio:
-    # ⚠️ 上游 minio/minio 在 Docker Hub 已不可匿名拉取（manifests 返回 401，
-    #    quay.io/minio/minio 同样 401）。这里改用社区归档镜像维持可用性。
-    #    如需自建镜像源，覆盖 MINIO_IMAGE 环境变量即可。
-    #    未实机验证：本镜像的 MINIO_ROOT_USER/PASSWORD 兼容性由 Bitnami 约定保证，
-    #    首次启动请确认 springboot/fastapi 能正常读写对象存储。
-    image: ${MINIO_IMAGE:-bitnamilegacy/minio:latest}
+    # 沿用官方镜像。
+    #
+    # 关于上游可拉取性: minio/minio 目前在 Docker Hub 已无法**匿名拉取**
+    # （manifests 请求返回 401，quay.io/minio/minio 同样 401，实测确认）。
+    # 但本机已存在该镜像，且现有 MinIO 数据（455 个对象 / 72MB）正是由它
+    # 写入并提供服务的，因此继续使用它风险最低。
+    #
+    # 曾尝试改用 bitnamilegacy/minio 规避拉取问题，实测**不可行**:
+    # 该镜像以 UID 1001 运行（覆盖 user: "0:0" 无效），而 ./data/minio 属主
+    # 为 root，MinIO 启动时需写入 .minio.sys/tmp 做清理，结果
+    # "FATAL Unable to write to the backend" 直接退出。
+    #
+    # 因此: 若将来本机镜像被删除、需要重新拉取，请先解决上述权限问题
+    # （例如改用命名卷，或 chown 数据目录到 1001），或自建镜像源后
+    # 通过 MINIO_IMAGE 覆盖。不要在未验证的情况下直接切换镜像。
+    image: ${MINIO_IMAGE:-minio/minio:latest}
     container_name: easystudy-minio
-    # 以 root 运行以便挂载 ./data/minio（宿主侧 bind mount 的属主无法预设）。
-    # 若改用命名卷，可删掉此行恢复非 root 运行。
-    user: "0:0"
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:?MINIO_USER 未在 .env 中设置}
