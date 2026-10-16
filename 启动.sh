@@ -38,7 +38,24 @@ check_cmd() {
 }
 
 ***REMOVED*** ── Java ──
-check_cmd "Java" "java" "请安装 JDK 17+ 并确保 java 命令可用"
+if command -v java >/dev/null 2>&1; then
+    JAVA_RAW=$(java -version 2>&1 | head -1)
+    ***REMOVED*** 从 "openjdk version \"21.0.1\" ..." 或 "java version \"1.8.0_504\"" 中取主版本号
+    JAVA_MAJOR=$(echo "$JAVA_RAW" | sed -n 's/.*version "\([0-9]*\).*/\1/p')
+    if [ -n "$JAVA_MAJOR" ] && [ "$JAVA_MAJOR" -ge 21 ] 2>/dev/null; then
+        echo -e " ${GREEN}[√]${RESET} Java: $JAVA_RAW"
+    else
+        echo -e " ${RED}[X]${RESET} Java 版本过低: $JAVA_RAW"
+        echo "      本项目要求 JDK 21+（源码使用文本块、switch 表达式等 21 特性）。"
+        echo "      JAVA_HOME 当前指向: ${JAVA_HOME:-未设置}"
+        echo "      仅安装新 JDK 不够，必须让 JAVA_HOME/PATH 指向它，否则 Maven 仍用旧的。"
+        CHECK_PASS=false
+    fi
+else
+    echo -e " ${RED}[X]${RESET} Java 未安装或不在 PATH 中"
+    echo "      请安装 JDK 21+ 并确保 java 命令可用"
+    CHECK_PASS=false
+fi
 
 ***REMOVED*** ── Maven ──
 check_cmd "Maven" "mvn" "请安装 Maven 并确保 mvn 命令可用"

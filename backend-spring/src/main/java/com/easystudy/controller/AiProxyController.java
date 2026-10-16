@@ -30,9 +30,12 @@ import java.util.concurrent.TimeUnit;
  * AI 代理控制器 — Spring Boot 网关模式
  *
  * 前端请求 /api/ai/** → Spring Boot 验证 JWT → 提取 userId/roles →
- * 注入 X-User-Id / X-User-Role → 转发到 FastAPI → 流式代理 SSE 响应
+ * 转发原始 Authorization（供下游独立验签）+ X-User-Id / X-User-Role（便于日志）
+ * → 流式代理 SSE 响应
  *
- * 这样 FastAPI 不对外暴露，所有请求必须经过 JWT 验证。
+ * 下游 FastAPI 不再信任 X-User-* 头，而是用共享密钥对转发的 JWT 独立验签，
+ * 因此即便 FastAPI 端口意外可达，也无法仅靠伪造头冒充身份。
+ * 另外 compose 已不再发布该端口（改为 expose）。
  */
 @Slf4j
 @RestController
@@ -45,6 +48,15 @@ public class AiProxyController {
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 取出调用方的原始 Bearer token，原样转发给 FastAPI 供其独立验签。
+     * 返回 null 表示请求未带 Authorization —— 此时下游会以 401 拒绝。
+     */
+    private static String bearerOf(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        return (header != null && header.startsWith("Bearer ")) ? header : null;
+    }
 
     /**
      * 将 FastAPI 的原始 JSON 响应包裹在 ApiResponse<T> 标准格式中
@@ -67,32 +79,50 @@ public class AiProxyController {
     }
 
     /**
-     * 启动时校验 fastapiUrl 仅允许本地/Docker 内部地址，防止 SSRF
+     * 校验 fastapiUrl 仅指向本地/Docker 内部服务，防止 SSRF。
+     *
+     * 原实现用 `url.startsWith("http://localhost")` 做整串前缀匹配，可被绕过：
+     *   http://localhost@169.254.169.254/   → userinfo 是 localhost，
+     *                                         真实 host 是云元数据服务
+     *   http://localhost.attacker.com/      → 前缀匹配成功，真实 host 是攻击者域名
+     * 现在改为先解析 URI，再对 getHost() 做精确判断，并显式拒绝 userinfo。
      */
-    @PostConstruct
-    public void validate() {
-        String url = fastapiUrl;
-        // 允许 localhost, 127.0.0.1, 以及 Docker Compose 内部服务名 (纯主机名，无点)
-        boolean allowed = url.startsWith("http://localhost")
-                || url.startsWith("http://127.0.0.1")
-                || url.startsWith("http://[::1]");
-        if (!allowed) {
-            // Docker 内部: http://servicename:port (主机名不含点)
-            try {
-                java.net.URI uri = new java.net.URI(url);
-                String host = uri.getHost();
-                if (host != null && !host.contains(".") && !host.contains("://")) {
-                    allowed = true;
-                }
-            } catch (Exception ignored) {
-                // URI 解析失败，拒绝
-            }
+    private static void assertInternalUrl(String url) {
+        java.net.URI uri;
+        try {
+            uri = new java.net.URI(url);
+        } catch (Exception e) {
+            throw new IllegalStateException("fastapi.url 无法解析: " + url);
         }
+
+        String scheme = uri.getScheme();
+        if (!"http".equalsIgnoreCase(scheme)) {
+            throw new IllegalStateException("fastapi.url 仅允许 http 协议，当前: " + scheme);
+        }
+        // 含 userinfo 的 URL 一律拒绝（正是上面那种绕过手法）
+        if (uri.getUserInfo() != null) {
+            throw new IllegalStateException("fastapi.url 不允许包含用户信息段(userinfo): " + url);
+        }
+        String host = uri.getHost();
+        if (host == null || host.isBlank()) {
+            throw new IllegalStateException("fastapi.url 缺少主机名: " + url);
+        }
+
+        boolean allowed = "localhost".equalsIgnoreCase(host)
+                || "127.0.0.1".equals(host)
+                || "::1".equals(host)
+                // Docker Compose 内部服务名：单个标签，不含点
+                || (!host.contains(".") && host.matches("[A-Za-z0-9][A-Za-z0-9-]*"));
         if (!allowed) {
             throw new IllegalStateException(
-                "fastapi.url 仅允许 localhost/127.0.0.1/Docker内部服务名，防止 SSRF。当前值: " + fastapiUrl
+                "fastapi.url 仅允许 localhost/127.0.0.1/::1/Docker内部服务名，防止 SSRF。当前主机: " + host
             );
         }
+    }
+
+    @PostConstruct
+    public void validate() {
+        assertInternalUrl(fastapiUrl);
         log.info("FastAPI proxy URL validated: {}", fastapiUrl);
     }
 
@@ -153,6 +183,8 @@ public class AiProxyController {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("X-User-Id", String.valueOf(userId));
             conn.setRequestProperty("X-User-Role", userRole);
+            String bearer = bearerOf(request);
+            if (bearer != null) conn.setRequestProperty("Authorization", bearer);
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(180000); // 3 分钟，匹配 LangGraph 全链路
 
@@ -220,6 +252,8 @@ public class AiProxyController {
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setRequestProperty("X-User-Id", String.valueOf(userId));
                 conn.setRequestProperty("X-User-Role", userRole);
+                String bearer = bearerOf(request);
+                if (bearer != null) conn.setRequestProperty("Authorization", bearer);
                 conn.setRequestProperty("Accept", "text/event-stream");
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(300000);
@@ -311,6 +345,8 @@ public class AiProxyController {
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-User-Id", String.valueOf(userId));
             headers.set("X-User-Role", userRole);
+            String bearer = bearerOf(request);
+            if (bearer != null) headers.set("Authorization", bearer);
             headers.setAccept(List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, MediaType.valueOf("text/markdown")));
 
             HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -384,6 +420,8 @@ public class AiProxyController {
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-User-Id", String.valueOf(userId));
             headers.set("X-User-Role", userRole);
+            String bearer = bearerOf(request);
+            if (bearer != null) headers.set("Authorization", bearer);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(body, headers);
@@ -446,6 +484,8 @@ public class AiProxyController {
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-User-Id", String.valueOf(userId));
             headers.set("X-User-Role", userRole);
+            String bearer = bearerOf(request);
+            if (bearer != null) headers.set("Authorization", bearer);
 
             HttpEntity<Void> entity = new HttpEntity<>(headers);
             ResponseEntity<String> response = restTemplate.exchange(

@@ -15,14 +15,27 @@ echo.
 set "CHECK_PASS=1"
 
 :: ── Java ──
+:: 注意: 仅"安装了新 JDK"不够 —— JAVA_HOME/PATH 必须指向它，
+:: 否则 Maven 仍会用旧 JDK，并以大量"非法字符"报错（文本块/switch 表达式无法解析）。
 where java >nul 2>&1
 if %errorlevel% neq 0 (
     echo  [X] Java 未安装或不在 PATH 中
-    echo      请安装 JDK 17+ 并确保 java 命令可用
+    echo      请安装 JDK 21+ 并确保 java 命令可用
     set "CHECK_PASS=0"
 ) else (
+    set "JAVA_MAJOR="
     for /f "tokens=3" %%i in ('java -version 2^>^&1 ^| findstr /i version') do set "JAVA_VER=%%i"
-    echo  [√] Java: %JAVA_VER%
+    for /f "tokens=2 delims=." %%v in ("%JAVA_VER:"=%") do set "JAVA_MAJOR=%%v"
+    if not defined JAVA_MAJOR set "JAVA_MAJOR=0"
+    if %JAVA_MAJOR% LSS 21 (
+        echo  [X] Java 版本过低: %JAVA_VER%
+        echo      本项目要求 JDK 21+^(源码使用文本块、switch 表达式等特性^)。
+        echo      JAVA_HOME 当前指向: %JAVA_HOME%
+        echo      仅安装新 JDK 不够，必须让 JAVA_HOME/PATH 指向它，否则 Maven 仍用旧的。
+        set "CHECK_PASS=0"
+    ) else (
+        echo  [√] Java: %JAVA_VER%
+    )
 )
 
 :: ── Maven ──

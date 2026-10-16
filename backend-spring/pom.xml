@@ -19,6 +19,13 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.12.5</jjwt.version>
+        <!--
+          源码含大量中文（提示文案、注释、邮件模板）。若不显式声明 UTF-8，
+          在中文 Windows 上 Maven 会以系统默认编码(GBK)读取源码，
+          导致"非法字符"编译失败 —— 项目此前因此完全无法在本机构建。
+        -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <dependencies>
