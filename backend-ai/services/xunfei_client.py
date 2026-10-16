@@ -127,7 +127,19 @@ async def xunfei_tts(
             on_error=on_error,
         )
         ws.on_open = lambda w: w.send(json.dumps(request_json))
-        ws.run_forever(timeout=timeout)
+        try:
+            ***REMOVED*** websocket-client 的 run_forever 没有 timeout 参数
+            ***REMOVED*** （签名是 sockopt/ping_interval/ping_timeout/... ），
+            ***REMOVED*** 原实现传 timeout 会抛 TypeError，导致语音合成永远失败。
+            ***REMOVED*** 总时限已由外层 asyncio.wait_for 控制，这里用 ping 保活并在
+            ***REMOVED*** 对端无响应时尽早断开。
+            ws.run_forever(ping_interval=20, ping_timeout=10)
+        finally:
+            ***REMOVED*** 无论正常结束还是异常，都要关闭底层 socket，避免连接泄漏
+            try:
+                ws.close()
+            except Exception:
+                pass
 
     try:
         await asyncio.wait_for(
@@ -135,6 +147,8 @@ async def xunfei_tts(
             timeout=timeout,
         )
     except asyncio.TimeoutError:
+        ***REMOVED*** 注意: 取消 future 不会终止已进入 run_forever 的线程，
+        ***REMOVED*** 该线程会在 ping_timeout 后自行退出。
         raise TimeoutError(f"讯飞星火 TTS 调用超时 ({timeout}s)")
 
     if error_msg:

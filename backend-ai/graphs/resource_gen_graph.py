@@ -353,11 +353,30 @@ async def assemble_response(state: ResourceGenState) -> dict:
 
 ***REMOVED*** ── 条件边: fanout ──
 
+***REMOVED*** resource_type → 生成节点名的显式映射。
+***REMOVED*** 不能直接用 f"gen_{rt}" 推导：reading_material 对应的节点名是 gen_reading，
+***REMOVED*** 推导会得到不存在的 gen_reading_material，LangGraph 解析条件边时抛
+***REMOVED*** KeyError 导致整个资源生成失败（reading_material 是默认类型之一）。
+_RESOURCE_NODE = {
+    "document": "gen_document",
+    "mermaid": "gen_mermaid",
+    "exercise_set": "gen_exercise_set",
+    "code_case": "gen_code_case",
+    "reading_material": "gen_reading",
+}
+
+
 def fanout_to_generators(state: ResourceGenState) -> list:
     """并行分发到生成节点"""
     nodes = []
     for rt in state.get("resource_types", []):
-        nodes.append(f"gen_{rt}")
+        node = _RESOURCE_NODE.get(rt)
+        if node is None:
+            ***REMOVED*** 未知类型不应让整张图崩掉，跳过并记录
+            logger.warning(f"[resource_gen] 未知资源类型，已跳过: {rt}")
+            continue
+        if node not in nodes:
+            nodes.append(node)
     return nodes if nodes else ["assemble"]
 
 

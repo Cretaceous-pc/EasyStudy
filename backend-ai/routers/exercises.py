@@ -54,9 +54,12 @@ async def submit_answer(
 
         with get_connection() as conn:
             with conn.cursor() as cur:
+                ***REMOVED*** 必须按 student_id 过滤：原实现只按 id 查，任何人遍历
+                ***REMOVED*** resource_id 就能读取他人资源的题目内容与正确答案。
+                ***REMOVED*** 对比 db.py 的 get_resource_by_id(resource_id, student_id) 是正确写法。
                 cur.execute(
-                    "SELECT content, course_id FROM resources WHERE id = %s",
-                    (req.resource_id,),
+                    "SELECT content, course_id FROM resources WHERE id = %s AND student_id = %s",
+                    (req.resource_id, user_id),
                 )
                 row = cur.fetchone()
                 if not row:
@@ -96,7 +99,11 @@ async def submit_answer(
             student_value = student_answer.get("selected") or student_answer.get("value")
             if isinstance(correct_answer, list):
                 ***REMOVED*** 多选题：比较集合
-                is_correct = set(student_answer.get("selected", [])) == set(correct_answer)
+                ***REMOVED*** 注意: 客户端可能把单选值写成标量（{"selected": 1}），
+                ***REMOVED*** 原实现直接 set(1) 会抛 TypeError: 'int' object is not iterable → 500。
+                raw_selected = student_answer.get("selected", [])
+                selected = raw_selected if isinstance(raw_selected, (list, tuple, set)) else [raw_selected]
+                is_correct = set(selected) == set(correct_answer)
             else:
                 is_correct = student_value == correct_answer
 

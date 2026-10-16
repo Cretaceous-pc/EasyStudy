@@ -4,14 +4,16 @@
 SSE 流式资源生成
 """
 
+import asyncio
 import json
 import logging
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from graphs.resource_gen_graph import compile_resource_gen_graph, ResourceGenState
+from services.db import check_enrollment
 from services.sse import sse_event, sse_error, sse_done, create_sse_response
 from services.deps import get_current_user_id, get_current_user_role
 
@@ -19,17 +21,36 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+***REMOVED*** 资源生成总时限：与对话链路保持一致，避免上游挂起时连接被长期占用
+***REMOVED*** （原先 ainvoke 没有超时，只靠 SSE 层 300s 静默超时兜底）
+RESOURCE_GEN_TIMEOUT_SEC = 240.0
+
 ***REMOVED*** ── 编译 ResourceGenState 图 ──
 resource_gen_app = compile_resource_gen_graph()
 
+***REMOVED*** 允许的资源类型（与 _RESOURCE_NODE 保持一致，避免拼错类型导致整张图失败）
+ResourceTypeName = Literal["document", "mermaid", "exercise_set", "code_case", "reading_material"]
+
+
+def _require_enrollment(student_id: int, course_id: int) -> None:
+    """课程范围接口的统一准入校验（对话链路原本已有，这里补齐其余接口）"""
+    if not check_enrollment(student_id, course_id):
+        raise HTTPException(status_code=403, detail="未选修该课程，无权访问该课程数据")
+
 
 class ResourceGenerateRequest(BaseModel):
-    """资源生成请求"""
+    """资源生成请求
+
+    长度上限是安全约束而非体验优化：topic 与 requirements 会被拼进提示词，
+    生成的"课程资料"随后写入 course_materials / knowledge_chunks / Chroma，
+    并被其他学生的问答检索命中。无上限时可用于跨用户的提示词注入，
+    同时构成 token 消耗放大（每个资源类型各调一次模型）。
+    """
     course_id: int
-    topic: str
-    resource_types: List[str]  ***REMOVED*** ["document", "mermaid", "exercise_set", "code_case", "reading_material"]
+    topic: str = Field(..., min_length=1, max_length=200)
+    resource_types: List[ResourceTypeName] = Field(..., min_length=1, max_length=5)
     conversation_id: Optional[int] = None
-    requirements: str = ""  ***REMOVED*** 用户自定义生成要求（max 10k chars）
+    requirements: str = Field(default="", max_length=2000)
 
 
 @router.post("/resources/generate")
@@ -39,6 +60,10 @@ async def generate_resources(
     user_role: str = Depends(get_current_user_role),
 ):
     """资源生成（SSE 流式）"""
+    ***REMOVED*** 准入校验：原实现不校验选课，任何登录用户都能对任意 course_id 生成资源，
+    ***REMOVED*** 既消耗大模型额度，也把内容写进该课程的共享知识库（影响其他学生检索）。
+    _require_enrollment(user_id, request.course_id)
+
     ***REMOVED*** 构造初始 State
     initial_state = ResourceGenState(
         student_id=user_id,
@@ -59,7 +84,13 @@ async def generate_resources(
     )
 
     async def event_stream():
-        """SSE 事件流"""
+        """SSE 事件流
+
+        协议约定：无论成功或失败，最后一个事件必须是 done。
+        原实现的两条错误分支只发 error 就 return，前端会一直等待
+        （与 chat.py 中"发送 error 后必须 send done"的约定不一致）。
+        """
+        done_sent = False
         try:
             ***REMOVED*** plan 事件
             yield sse_event("plan", {
@@ -67,12 +98,17 @@ async def generate_resources(
                 "resource_types": request.resource_types,
             })
 
-            ***REMOVED*** 执行图（异步，不阻塞事件循环）
-            result = await resource_gen_app.ainvoke(initial_state)
+            ***REMOVED*** 执行图（带超时，避免上游挂起时连接一直占用）
+            result = await asyncio.wait_for(
+                resource_gen_app.ainvoke(initial_state),
+                timeout=RESOURCE_GEN_TIMEOUT_SEC,
+            )
 
             ***REMOVED*** 检查错误
             if result.get("error"):
                 yield sse_error(result["error"], 50002)
+                yield sse_done(generated_count=0, failed_count=0, resource_ids=[])
+                done_sent = True
                 return
 
             ***REMOVED*** progress + resource 事件：从 Graph 结果中提取真实数据
@@ -114,10 +150,18 @@ async def generate_resources(
                 failed_count=result.get("failed_count", 0),
                 resource_ids=result.get("resource_ids", []),
             )
+            done_sent = True
 
+        except asyncio.TimeoutError:
+            logger.error("Resource generation timed out after %ss", RESOURCE_GEN_TIMEOUT_SEC)
+            yield sse_error("资源生成超时，请稍后重试或减少资源数量", 50002)
         except Exception as e:
             logger.error("Resource generation error: %s", str(e), exc_info=True)
             yield sse_error("资源生成失败，请稍后重试", 50002)
+        finally:
+            ***REMOVED*** 兜底：任何异常路径都必须补一个 done，否则前端永久等待
+            if not done_sent:
+                yield sse_done(generated_count=0, failed_count=0, resource_ids=[])
 
     return create_sse_response(event_stream())
 
@@ -133,6 +177,7 @@ async def list_resources(
 ):
     """资源列表"""
     from services.db import get_available_resources
+    _require_enrollment(user_id, course_id)
     resources = get_available_resources(user_id, course_id)
 
     ***REMOVED*** 过滤

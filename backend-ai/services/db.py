@@ -259,16 +259,24 @@ def save_learning_path(
             return {"path_id": path_id, "abandoned_path_ids": abandoned_ids}
 
 
-def update_path_item_status(item_id: int, status: str) -> dict | None:
-    """更新路径节点状态，返回更新后的节点信息"""
-    import json
+def update_path_item_status(item_id: int, student_id: int, status: str) -> dict | None:
+    """更新路径节点状态，返回更新后的节点信息
+
+    必须带 student_id 归属校验：原实现只按 item_id 更新
+    （WHERE id = %s），任何登录用户都能篡改其他同学的学习进度。
+    """
     with get_connection() as conn:
         with conn.cursor() as cur:
-            completed_at = "NOW()" if status == "completed" else "NULL"
             cur.execute(
-                f"UPDATE learning_path_items SET status = %s, completed_at = {completed_at} "
-                "WHERE id = %s RETURNING id, status, completed_at",
-                (status, item_id),
+                "UPDATE learning_path_items i "
+                "SET status = %s, "
+                "    completed_at = CASE WHEN %s = 'completed' THEN NOW() ELSE NULL END "
+                "WHERE i.id = %s AND EXISTS ("
+                "  SELECT 1 FROM learning_paths lp "
+                "  WHERE lp.id = i.path_id AND lp.student_id = %s"
+                ") "
+                "RETURNING i.id, i.status, i.completed_at",
+                (status, status, item_id, student_id),
             )
             row = cur.fetchone()
             if not row:

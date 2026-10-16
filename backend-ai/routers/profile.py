@@ -201,8 +201,11 @@ async def reset_profile(
 
     if current["profile"] and current["version"] > 0:
         ***REMOVED*** 保存重置前快照
+        ***REMOVED*** 注意签名是 (student_id, course_id, profile, version, trigger) —— 共 5 个参数。
+        ***REMOVED*** 原实现传了 4 个且缺少 course_id，任何已有画像的用户调用本接口都会
+        ***REMOVED*** 抛 TypeError 导致 500（POST /profile/reset 完全不可用）。
         save_profile_snapshot(
-            user_id, current["profile"], current["version"], "reset"
+            user_id, course_id, current["profile"], current["version"], "reset"
         )
 
     ***REMOVED*** 写入空画像
