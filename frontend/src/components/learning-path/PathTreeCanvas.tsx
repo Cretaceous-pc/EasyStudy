@@ -9,9 +9,9 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { buildFlowGraph } from '../../utils/dagreLayout';
+import type { TreeNode, PathNodeStatus, PathFlowNode, PathFlowEdge } from '../../types/learningPath';
 import PathTreeNode from './PathTreeNode';
 import NodeTeachModal from './NodeTeachModal';
-import type { TreeNode, PathNodeStatus } from '../../types/learningPath';
 
 // ── 小地图样式 ──
 const MINIMAP_STYLE: React.CSSProperties = {
@@ -36,7 +36,9 @@ interface Props {
  */
 export default function PathTreeCanvas({ nodes, onStatusChange }: Props) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const rfInstance = useRef<ReactFlowInstance | null>(null);
+  // 泛型必须与传给 <ReactFlow> 的 node/edge 类型一致，否则 onInit 的
+  // 实例类型与 ref 声明不兼容。
+  const rfInstance = useRef<ReactFlowInstance<PathFlowNode, PathFlowEdge> | null>(null);
   const hasCentered = useRef(false);
 
   // ── 构建 React Flow 数据 ──

@@ -11,6 +11,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
+import { safeRehypePlugins } from '../utils/safeMarkdown';
 import MermaidDiagram from '../components/chat/MermaidDiagram';
 import { preprocessMermaid } from '../utils/mermaidPreprocessor';
 import gsap from 'gsap';
@@ -381,7 +382,7 @@ const DocContent = memo(function DocContent({ content }: { content: string }) {
     <div style={{ fontSize: 14, color: 'var(--olive-gray)', lineHeight: 1.75, fontFamily: 'var(--font-sans)' }}>
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
+        rehypePlugins={[...safeRehypePlugins, rehypeKatex, rehypeHighlight]}
         components={{
           p: ({ children }) => <p style={{ marginBottom: 14 }}>{children}</p>,
           strong: ({ children }) => <strong style={{ color: 'var(--near-black)', fontWeight: 500 }}>{children}</strong>,

@@ -28,7 +28,8 @@ const mockPath: LearningPath = {
           { title: 'Machine Learning Crash Course (Google)', url: 'https://developers.google.com/machine-learning/crash-course', type: 'video' },
           { title: '机器学习入门指南', type: 'article' },
         ],
-        difficulty: 'beginner',
+         difficulty: 'beginner',
+         teachContent: '本书该节点的教学正文（示例数据）。',
       },
     },
     {
@@ -49,7 +50,8 @@ const mockPath: LearningPath = {
           { title: 'Linear Regression Explained', url: 'https://www.youtube.com/watch?v=nk2CQITm_eo', type: 'video' },
           { title: '梯度下降可视化', type: 'exercise' },
         ],
-        difficulty: 'beginner',
+         difficulty: 'beginner',
+         teachContent: '本书该节点的教学正文（示例数据）。',
       },
     },
     {
@@ -70,7 +72,8 @@ const mockPath: LearningPath = {
           { title: 'Logistic Regression Deep Dive', type: 'video' },
           { title: '分类模型练习', type: 'exercise' },
         ],
-        difficulty: 'intermediate',
+         difficulty: 'intermediate',
+         teachContent: '本书该节点的教学正文（示例数据）。',
       },
     },
     {
@@ -90,7 +93,8 @@ const mockPath: LearningPath = {
         resources: [
           { title: 'Regularization Explained', type: 'article' },
         ],
-        difficulty: 'intermediate',
+         difficulty: 'intermediate',
+         teachContent: '本书该节点的教学正文（示例数据）。',
       },
     },
     {
@@ -111,7 +115,8 @@ const mockPath: LearningPath = {
           { title: 'XGBoost 官方文档', url: 'https://xgboost.readthedocs.io/', type: 'book' },
           { title: 'Random Forest Visualization', type: 'exercise' },
         ],
-        difficulty: 'intermediate',
+         difficulty: 'intermediate',
+         teachContent: '本书该节点的教学正文（示例数据）。',
       },
     },
     {
@@ -131,7 +136,8 @@ const mockPath: LearningPath = {
         resources: [
           { title: 'SVM Tutorial (MIT)', type: 'video' },
         ],
-        difficulty: 'advanced',
+         difficulty: 'advanced',
+         teachContent: '本书该节点的教学正文（示例数据）。',
       },
     },
     {
@@ -152,7 +158,8 @@ const mockPath: LearningPath = {
           { title: '3Blue1Brown 神经网络系列', url: 'https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi', type: 'video' },
           { title: '手写数字识别练习', type: 'exercise' },
         ],
-        difficulty: 'advanced',
+         difficulty: 'advanced',
+         teachContent: '本书该节点的教学正文（示例数据）。',
       },
     },
   ]),

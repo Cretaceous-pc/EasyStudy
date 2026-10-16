@@ -77,5 +77,7 @@ export interface PathNodeData {
   onSelect: (id: string) => void;
 }
 
-export type PathFlowNode = Node<PathNodeData>;
+// Node<T> 要求 T extends Record<string, unknown>。PathNodeData 是 interface
+// （没有隐式索引签名），必须显式交叉 Record 才能满足该约束。
+export type PathFlowNode = Node<PathNodeData & Record<string, unknown>>;
 export type PathFlowEdge = Edge;

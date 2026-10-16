@@ -13,6 +13,8 @@ export interface FileObject {
 
 export interface Material {
   material_id: number;
+  /** 后端 MaterialDto 返回 course_id；上传接口的返回不含该字段 */
+  course_id?: number;
   title: string;
   material_type: string;
   chapter: string;
@@ -20,6 +22,7 @@ export interface Material {
   file_url: string;
   processing_status: string;
   chunk_count?: number;
+  file_size?: number;
   created_at: string;
 }
 

@@ -127,7 +127,9 @@ export default function ChatInput({ expanded = false, variant = 'floating', cont
       onEvent: (evt) => {
         if (handled) return;
         if (evt.type === 'conversation_created' && evt.data?.conversation_id) {
-          setCurrentConversation(evt.data.conversation_id);
+          // SSEEvent.data 是 unknown；必须显式收敛为 number 再使用，
+          // 否则会把任意 JSON 值当作会话 ID 传下去。
+          setCurrentConversation(Number(evt.data.conversation_id));
           fetchConversations({ course_id: courseId });
         }
         if (evt.type === 'message' && typeof evt.data.content === 'string') {

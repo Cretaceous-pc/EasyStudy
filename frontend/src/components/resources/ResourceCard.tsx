@@ -97,7 +97,7 @@ export default function ResourceCard({ resource }: Props) {
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const res = await api.get(`/api/ai/resources/${resource.id}/download`, {
+      const res = await api.get(`/api/ai/resources/${resource.resource_id}/download`, {
         responseType: 'blob',
       });
       const blob = res.data as Blob;
@@ -118,7 +118,7 @@ export default function ResourceCard({ resource }: Props) {
     setShowDeleteConfirm(false);
     setDeleting(true);
     try {
-      await api.delete(`/api/ai/resources/${resource.id}`);
+      await api.delete(`/api/ai/resources/${resource.resource_id}`);
       // 刷新资源列表
       const { activeCourseId } = useCourseStore.getState();
       if (activeCourseId) {
@@ -140,7 +140,7 @@ export default function ResourceCard({ resource }: Props) {
     const md = extractMarkdown(resource.content);
 
     setCurrentFile({
-      id: parseInt(resource.id, 10) || 0,
+      id: resource.resource_id,
       title: resource.title,
       chapter: resource.topic || 'AI生成',
       section: '',

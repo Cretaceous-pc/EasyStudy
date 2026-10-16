@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { normalizeCourseStatus } from '../types/course';
 import type { Course } from '../types/course';
 import type { Material } from '../types/material';
 import * as courseService from '../services/courseService';
@@ -88,8 +89,11 @@ export const useTeacherStore = create<TeacherStore>((set, get) => ({
   fetchCourseMaterials: async (courseId) => {
     set({ isLoading: true, error: null });
     try {
+      // materialService.getMaterialList 返回的是 Material[]（后端
+      // GET /api/materials 直接返回数组）。原实现取 data.items，
+      // 恒为 undefined，视图层 .map() 会抛 TypeError 导致白屏。
       const data = await materialService.getMaterialList({ course_id: courseId });
-      set({ courseMaterials: data.items, selectedCourseId: courseId, isLoading: false });
+      set({ courseMaterials: data ?? [], selectedCourseId: courseId, isLoading: false });
     } catch (e) {
       set({ isLoading: false, error: (e as Error).message });
     }
@@ -106,9 +110,8 @@ export const useTeacherStore = create<TeacherStore>((set, get) => ({
         subject: data.subject,
         teacher_name: '',
         student_count: 0,
-        status: result.status,
+        status: normalizeCourseStatus(result.status),
         created_at: result.created_at,
-        updated_at: result.created_at,
       };
       set((s) => ({ myCourses: [...s.myCourses, newCourse] }));
       return newCourse;
@@ -122,10 +125,20 @@ export const useTeacherStore = create<TeacherStore>((set, get) => ({
     set({ error: null });
     try {
       await courseService.updateCourse(courseId, data);
-      // API 成功后更新本地 store
+      // API 成功后更新本地 store。
+      // 注意 status 来自自由字符串，需要归一化后再写回，否则会把非法字面量
+      // 塞进 Course.status（窄联合类型），使后续判断全部落空。
+      // 注意: updateCourse 接口的入参 status 是自由 string，而 Course.status 是
+      // 窄联合类型。直接展开 data 会把 string 塞进 Course，故只挑取类型安全的字段，
+      // 并对 status 做归一化。
+      const patch: Partial<Course> = {
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+      };
+      if (data.status !== undefined) patch.status = normalizeCourseStatus(data.status);
       set((s) => ({
         myCourses: s.myCourses.map((c) =>
-          c.course_id === courseId ? { ...c, ...data } : c
+          c.course_id === courseId ? { ...c, ...patch } : c
         ),
       }));
     } catch (e) {

@@ -311,7 +311,7 @@ export default function ResourceView() {
         </div>
         <div className="grid grid-cols-1 gap-3">
           {resources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
+            <ResourceCard key={resource.resource_id} resource={resource} />
           ))}
         </div>
         {resources.length === 0 && (

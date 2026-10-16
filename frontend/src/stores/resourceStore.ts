@@ -8,16 +8,16 @@ interface ResourceStore {
   isGenerating: boolean;
   isLoading: boolean;
   progress: GenerationProgress | null;
-  selectedResourceId: string | null;
+  selectedResourceId: number | null;
   error: string | null;
 
   // 同步 setter
   setResources: (resources: Resource[]) => void;
   addResource: (resource: Resource) => void;
-  updateResource: (id: string, patch: Partial<Resource>) => void;
+  updateResource: (id: number, patch: Partial<Resource>) => void;
   setGenerating: (val: boolean) => void;
   setProgress: (progress: GenerationProgress | null) => void;
-  selectResource: (id: string | null) => void;
+  selectResource: (id: number | null) => void;
   clear: () => void;
 
   // 异步 API action
@@ -44,7 +44,7 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
   updateResource: (id, patch) =>
     set((s) => ({
       resources: s.resources.map((r) =>
-        r.id === id ? { ...r, ...patch } : r
+        r.resource_id === id ? { ...r, ...patch } : r
       ),
     })),
 
@@ -68,7 +68,7 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
       const data = await resourceService.getResourceList(params);
       // 映射后端字段到前端 Resource 类型
       const resources: Resource[] = data.items.map((item) => ({
-        id: String(item.resource_id),
+        resource_id: item.resource_id,
         resource_type: item.resource_type as ResourceType,
         title: (item.title || '').replace(/^(document|mermaid|exercise_set|code_case|reading_material):\s*/i, ''),
         topic: item.topic ?? '',
@@ -89,10 +89,10 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
     try {
       const detail = await resourceService.getResourceDetail(resourceId);
       // 更新 resources 列表中对应项的详情
-      const id = String(resourceId);
+      const id = resourceId;
       set((s) => ({
         resources: s.resources.map((r) =>
-          r.id === id
+          r.resource_id === id
             ? {
                 ...r,
                 content: detail.content,
@@ -104,7 +104,7 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
         ),
       }));
       return {
-        id,
+        resource_id: id,
         resource_type: detail.resource_type as ResourceType,
         title: detail.title,
         topic: detail.topic,
@@ -195,7 +195,7 @@ export const useResourceStore = create<ResourceStore>((set, get) => ({
               case 'resource':
                 // 新增生成的资源到列表
                 get().addResource({
-                  id: String(parsed.resource_id ?? Date.now()),
+                  resource_id: Number(parsed.resource_id) || 0,
                   resource_type: (parsed.resource_type ?? 'document') as ResourceType,
                   title: (parsed.title ?? '').replace(/^(document|mermaid|exercise_set|code_case|reading_material):\s*/i, ''),
                   topic: parsed.topic ?? '',

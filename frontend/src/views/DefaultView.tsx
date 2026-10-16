@@ -221,7 +221,7 @@ export default function DefaultView() {
                 onMouseLeave={(e) => e.currentTarget.classList.remove('show-thumb')}
               >
                 {resources.map((r) => (
-                  <ResourceCardSmall key={r.id} resource={r} />
+                  <ResourceCardSmall key={r.resource_id} resource={r} />
                 ))}
               </div>
             )}
@@ -495,7 +495,7 @@ function ResourceCardSmall({ resource }: { resource: import('../types/resource')
     const { setCurrentFile } = useLayoutStore.getState();
     const { currentCourse } = useCourseStore.getState();
     setCurrentFile({
-      id: parseInt(resource.id, 10) || 0,
+      id: resource.resource_id,
       title: resource.title,
       chapter: resource.topic || 'AI生成',
       section: '',

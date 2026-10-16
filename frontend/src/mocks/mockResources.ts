@@ -3,7 +3,7 @@ import type { Resource } from '../types/resource';
 
 const mockResources: Resource[] = [
   {
-    id: 'res-doc-001',
+    resource_id: 1,
     resource_type: 'document',
     title: '线性回归知识点总结',
     content: `***REMOVED******REMOVED*** 线性回归（Linear Regression）
@@ -28,13 +28,13 @@ $$w_{t+1} = w_t - \\eta \\nabla_w L$$
 ---
 
 > 关键理解：线性回归假设目标变量与特征之间存在线性关系，通过最小化预测误差的平方和来估计参数。`,
-    courseId: 1,
+    course_id: 1,
     topic: '线性回归',
-    createdAt: '2026-05-26T10:30:00Z',
+    created_at: '2026-05-26T10:30:00Z',
     status: 'completed',
   },
   {
-    id: 'res-map-001',
+    resource_id: 2,
     resource_type: 'mermaid',
     title: '监督学习思维导图',
     content: `graph TD
@@ -49,13 +49,13 @@ $$w_{t+1} = w_t - \\eta \\nabla_w L$$
     H --> J[梯度提升树]
     D --> K[最小二乘法]
     D --> L[梯度下降]`,
-    courseId: 1,
+    course_id: 1,
     topic: '监督学习',
-    createdAt: '2026-05-26T11:00:00Z',
+    created_at: '2026-05-26T11:00:00Z',
     status: 'completed',
   },
   {
-    id: 'res-exe-001',
+    resource_id: 3,
     resource_type: 'exercise_set',
     title: '逻辑回归练习题',
     content: `***REMOVED******REMOVED******REMOVED*** 练习题 1：sigmoid 函数
@@ -80,13 +80,13 @@ $$L = -[1 \\times \\log(0.9) + 0] \\approx 0.105$$
 ***REMOVED******REMOVED******REMOVED*** 练习题 3：梯度计算
 推导逻辑回归对权重 $w_j$ 的梯度：
 $$\\frac{\\partial L}{\\partial w_j} = \\frac{1}{n} \\sum_{i=1}^{n} (\\hat{y}_i - y_i) x_{ij}$$`,
-    courseId: 1,
+    course_id: 1,
     topic: '逻辑回归',
-    createdAt: '2026-05-26T14:00:00Z',
+    created_at: '2026-05-26T14:00:00Z',
     status: 'completed',
   },
   {
-    id: 'res-code-001',
+    resource_id: 4,
     resource_type: 'code_case',
     title: 'NumPy 实现线性回归',
     content: `\`\`\`python
@@ -136,13 +136,13 @@ w, b = linear_regression(X, y)
 print(f'Learned w: {w}')
 print(f'Learned b: {b:.4f}')
 \`\`\``,
-    courseId: 1,
+    course_id: 1,
     topic: '线性回归实现',
-    createdAt: '2026-05-26T15:30:00Z',
+    created_at: '2026-05-26T15:30:00Z',
     status: 'completed',
   },
   {
-    id: 'res-read-001',
+    resource_id: 5,
     resource_type: 'reading_material',
     title: '贝叶斯方法入门拓展阅读',
     content: `***REMOVED******REMOVED*** 延伸阅读：贝叶斯视角下的机器学习
@@ -168,9 +168,9 @@ print(f'Learned b: {b:.4f}')
 | 小数据 | 效果差 | 先验可发挥作用 |
 
 > 提示：本章只要求理解贝叶斯思想，不要求掌握变分推断或 MCMC 采样。`,
-    courseId: 1,
+    course_id: 1,
     topic: '贝叶斯方法',
-    createdAt: '2026-05-26T16:00:00Z',
+    created_at: '2026-05-26T16:00:00Z',
     status: 'completed',
   },
 ];

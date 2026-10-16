@@ -33,7 +33,10 @@ const GENERATE_OPTIONS: { type: ResourceType; label: string; icon: any }[] = [
 type Phase = 'form' | 'generating' | 'done' | 'error';
 
 export default function ResourceGenModal({ open, onClose, contextContent }: Props) {
-  const { activeCourseId } = useCourseStore();
+  // currentCourse 必须在此解构：原实现只取了 activeCourseId，
+  // 但下方"立即查看资源"里引用了 currentCourse?.title，
+  // 该标识符在作用域内不存在 -> 点击即 ReferenceError（且已打进生产产物）。
+  const { activeCourseId, currentCourse } = useCourseStore();
   const { generateResources, isGenerating, progress } = useResourceStore();
   const { messages } = useChatStore();
 
@@ -424,7 +427,7 @@ export default function ResourceGenModal({ open, onClose, contextContent }: Prop
                 else if (typeof c?.text === 'string') md = c.text;
                 else if (c) md = JSON.stringify(c, null, 2);
                 useLayoutStore.getState().setCurrentFile({
-                  id: parseInt(r.id, 10) || 0,
+                  id: r.resource_id,
                   title: r.title,
                   chapter: r.topic || '',
                   section: '',

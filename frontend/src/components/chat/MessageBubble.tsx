@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
+import { safeRehypePlugins } from '../../utils/safeMarkdown';
 import type { Message } from '../../types/chat';
 import { api } from '../../services/api';
 import { useChatStore } from '../../stores/chatStore';
@@ -200,7 +201,7 @@ function MarkdownContent({ content }: { content: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkMath, remarkGfm]}
-      rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
+      rehypePlugins={[...safeRehypePlugins, rehypeKatex, rehypeHighlight]}
       components={{
         p: ({ children }) => <p style={{ margin: '0 0 10px 0' }}>{children}</p>,
         strong: ({ children }) => (

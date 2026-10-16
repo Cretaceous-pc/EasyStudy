@@ -9,6 +9,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { safeRehypePlugins } from '../../utils/safeMarkdown';
 import { useLayoutStore } from '../../stores';
 import AppModal from '../shared/AppModal';
 import type { MainView } from '../../stores/layoutStore';
@@ -175,7 +176,7 @@ const AboutContent = memo(function AboutContent() {
     <div style={{ fontSize: 13.5, color: 'var(--olive-gray)', lineHeight: 1.85, fontFamily: 'var(--font-sans)' }}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw] as any}
+        rehypePlugins={[...safeRehypePlugins] as any}
         components={{
           h1: ({ children }) => (
             <h1 style={{ fontSize: 18, fontWeight: 500, margin: '16px 0 10px', color: 'var(--near-black)', fontFamily: 'var(--font-serif)' }}>

@@ -9,6 +9,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
+import { safeRehypePlugins } from '../../utils/safeMarkdown';
 import type { TreeNode, PathNodeStatus } from '../../types/learningPath';
 import AppModal from '../shared/AppModal';
 import { preprocessMermaid } from '../../utils/mermaidPreprocessor';
@@ -111,7 +112,7 @@ const TeachContent = memo(function TeachContent({ md }: { md: string }) {
     <div style={{ fontSize: 14, color: 'var(--olive-gray)', lineHeight: 1.85, fontFamily: 'var(--font-sans)' }}>
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight] as any}
+        rehypePlugins={[...safeRehypePlugins, rehypeKatex, rehypeHighlight] as any}
         components={{
           h1: ({ children }) => (
             <h1 style={{ fontSize: 20, fontWeight: 500, margin: '18px 0 10px', color: 'var(--near-black)', fontFamily: 'var(--font-serif)', borderBottom: '1px solid var(--border-cream)', paddingBottom: 6 }}>

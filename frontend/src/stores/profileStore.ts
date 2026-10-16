@@ -70,7 +70,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
   fetchHistory: async (courseId, limit = 20) => {
     set({ error: null });
     try {
-      const data = await profileService.getProfileHistory({ course_id: courseId, limit });
+      const data = await profileService.getProfileHistory({ limit });
       const snapshots: ProfileSnapshot[] = (data.snapshots ?? []).map((s) => {
         const dims = Object.entries(s.profile ?? {}).map(([key, val]: [string, unknown]) => {
           const v = val as Record<string, unknown>;

@@ -68,8 +68,7 @@ export const useCourseStore = create<CourseStore>((set, get) => ({
         cover_url: enrollment.cover_url,
         student_count: enrollment.student_count ?? 0,
         status: enrollment.status ?? 'active',
-        created_at: enrollment.enrolled_at ?? '',
-        updated_at: '',
+        created_at: enrollment.created_at ?? '',
       }));
       set({ enrolledCourses: courses, isLoading: false });
     } catch (e) {
