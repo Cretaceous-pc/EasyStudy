@@ -12,20 +12,20 @@
 
 <br />
 
-***REMOVED******REMOVED*** 目录
+## 目录
 
-- [项目背景](***REMOVED***项目背景)
-- [架构设计](***REMOVED***架构设计)
-- [技术栈](***REMOVED***技术栈)
-- [快速启动（Docker）](***REMOVED***快速启动docker)
-- [常规启动（本地开发）](***REMOVED***常规启动本地开发)
-- [项目结构](***REMOVED***项目结构)
-- [效果展示](***REMOVED***效果展示)
-- [许可](***REMOVED***许可)
+- [项目背景](#项目背景)
+- [架构设计](#架构设计)
+- [技术栈](#技术栈)
+- [快速启动（Docker）](#快速启动docker)
+- [常规启动（本地开发）](#常规启动本地开发)
+- [项目结构](#项目结构)
+- [效果展示](#效果展示)
+- [许可](#许可)
 
 <br />
 
-***REMOVED******REMOVED*** 项目背景
+## 项目背景
 
 传统在线学习平台存在几个痛点：
 
@@ -38,9 +38,9 @@ EasyStudy 通过 AI Agent 解决以上问题：为每门课程生成个性化的
 
 <br />
 
-***REMOVED******REMOVED*** 架构设计
+## 架构设计
 
-***REMOVED******REMOVED******REMOVED*** 整体架构图
+### 整体架构图
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -100,7 +100,7 @@ EasyStudy 通过 AI Agent 解决以上问题：为每门课程生成个性化的
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-***REMOVED******REMOVED******REMOVED*** 核心流程
+### 核心流程
 
 ```
 用户注册 ──→ 填写学习问卷 ──→ 生成画像 (ProfileGraph)
@@ -115,7 +115,7 @@ EasyStudy 通过 AI Agent 解决以上问题：为每门课程生成个性化的
   遇到问题 ──→ AI 助教答疑 (RAG + 上下文) ──→ 持续更新画像
 ```
 
-***REMOVED******REMOVED******REMOVED*** 分层说明
+### 分层说明
 
 | 层级 | 技术 | 职责 |
 |------|------|------|
@@ -129,47 +129,47 @@ EasyStudy 通过 AI Agent 解决以上问题：为每门课程生成个性化的
 
 <br />
 
-***REMOVED******REMOVED*** 环境配置
+## 环境配置
 
-***REMOVED******REMOVED******REMOVED*** 配置文件
+### 配置文件
 
 项目根目录下需要创建 `.env` 文件（参考 `.env.example`），包含以下配置项：
 
 ```ini
-***REMOVED*** ── 数据库 (PostgreSQL) ──
+# ── 数据库 (PostgreSQL) ──
 DB_USER=easystudy
 DB_PASSWORD=your_db_password_here
 
-***REMOVED*** ── 文件存储 (MinIO) ──
+# ── 文件存储 (MinIO) ──
 MINIO_USER=easystudy_admin
 MINIO_PASSWORD=your_minio_password_here
 
-***REMOVED*** ── JWT 密钥（生成方式: openssl rand -hex 32） ──
+# ── JWT 密钥（生成方式: openssl rand -hex 32） ──
 JWT_SECRET=your_64_char_hex_secret_here
 
-***REMOVED*** ── DeepSeek API ──
+# ── DeepSeek API ──
 DEEPSEEK_API_KEY=sk-your_deepseek_api_key
 DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 
-***REMOVED*** ── 讯飞星火（可选，用于语音/更多模型） ──
+# ── 讯飞星火（可选，用于语音/更多模型） ──
 XUNFEI_APP_ID=your_app_id
 XUNFEI_API_KEY=your_api_key
 XUNFEI_API_SECRET=your_api_secret
 
-***REMOVED*** ── 邮件 (SMTP，用于找回密码) ──
+# ── 邮件 (SMTP，用于找回密码) ──
 MAIL_HOST=smtp.qq.com
 MAIL_PORT=587
 MAIL_USERNAME=your_email@qq.com
 MAIL_PASSWORD=your_smtp_authorization_code
 MAIL_FROM=your_email@qq.com
 
-***REMOVED*** ── 前端 CORS ──
+# ── 前端 CORS ──
 CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 > **注意**: `.env` 包含敏感信息，不应提交到 Git。`.env.example` 是模板文件，可安全提交。
 
-***REMOVED******REMOVED******REMOVED*** 数据库初始化
+### 数据库初始化
 
 PostgreSQL 容器首次启动时会自动执行 `scripts/init-db.sql` 初始化脚本，完成以下操作：
 
@@ -191,7 +191,7 @@ PostgreSQL 容器首次启动时会自动执行 `scripts/init-db.sql` 初始化�
 
 若需重置数据库，删除 `./data/postgres/` 目录后重启容器即可。
 
-***REMOVED******REMOVED******REMOVED*** Spring Boot 配置
+### Spring Boot 配置
 
 `backend-spring/src/main/resources/` 下的配置文件：
 
@@ -202,13 +202,13 @@ PostgreSQL 容器首次启动时会自动执行 `scripts/init-db.sql` 初始化�
 
 这些配置项均通过 `${VAR_NAME:default}` 方式从环境变量读取，优先使用 `.env` 中定义的值。
 
-***REMOVED******REMOVED******REMOVED*** FastAPI 配置
+### FastAPI 配置
 
 `backend-ai/` 下的 AI 服务通过环境变量读取配置，关键变量与 `.env` 对应。启动时 FastAPI 会验证必要的配置项是否已设置。
 
 <br />
 
-***REMOVED******REMOVED*** 技术栈
+## 技术栈
 
 | 类别 | 技术 |
 |------|------|
@@ -225,33 +225,33 @@ PostgreSQL 容器首次启动时会自动执行 `scripts/init-db.sql` 初始化�
 
 <br />
 
-***REMOVED******REMOVED*** 快速启动（Docker）
+## 快速启动（Docker）
 
-***REMOVED******REMOVED******REMOVED*** 前置要求
+### 前置要求
 
 - [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
 - 配置 `.env` 文件（参考 `.env.example`）填入 API Key
 
-***REMOVED******REMOVED******REMOVED*** 启动全部服务
+### 启动全部服务
 
 ```bash
-***REMOVED*** 一键启动全部 7 个服务
+# 一键启动全部 7 个服务
 docker compose up -d --wait
 ```
 
-***REMOVED******REMOVED******REMOVED*** 仅启动中间件（应用层本地开发）
+### 仅启动中间件（应用层本地开发）
 
 ```bash
-***REMOVED*** 启动中间件
+# 启动中间件
 docker compose up -d --wait postgres redis chroma minio
 
-***REMOVED*** 新终端启动应用层
-cd backend-spring && mvn spring-boot:run                           ***REMOVED*** Spring Boot → :8080
-cd backend-ai   && source .venv/bin/activate && uvicorn main:app --host 0.0.0.0 --port 8000 --reload   ***REMOVED*** FastAPI → :8000
-cd frontend     && npm run dev                                      ***REMOVED*** 前端 → :5173
+# 新终端启动应用层
+cd backend-spring && mvn spring-boot:run                           # Spring Boot → :8080
+cd backend-ai   && source .venv/bin/activate && uvicorn main:app --host 0.0.0.0 --port 8000 --reload   # FastAPI → :8000
+cd frontend     && npm run dev                                      # 前端 → :5173
 ```
 
-***REMOVED******REMOVED******REMOVED*** 停止服务
+### 停止服务
 
 ```bash
 docker compose down
@@ -259,9 +259,9 @@ docker compose down
 
 <br />
 
-***REMOVED******REMOVED*** 常规启动（本地开发）
+## 常规启动（本地开发）
 
-***REMOVED******REMOVED******REMOVED*** 前置要求
+### 前置要求
 
 - JDK 21+
 - Maven 3.9+
@@ -269,13 +269,13 @@ docker compose down
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/)
 
-***REMOVED******REMOVED******REMOVED*** 1. 启动中间件
+### 1. 启动中间件
 
 ```bash
 docker compose up -d --wait postgres redis chroma minio
 ```
 
-***REMOVED******REMOVED******REMOVED*** 2. 启动 Spring Boot
+### 2. 启动 Spring Boot
 
 ```bash
 cd backend-spring
@@ -285,7 +285,7 @@ export MINIO_PASSWORD=your_minio_password
 mvn spring-boot:run
 ```
 
-***REMOVED******REMOVED******REMOVED*** 3. 启动 FastAPI AI 后端
+### 3. 启动 FastAPI AI 后端
 
 ```bash
 cd backend-ai
@@ -295,7 +295,7 @@ source .venv/bin/activate
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-***REMOVED******REMOVED******REMOVED*** 4. 启动前端
+### 4. 启动前端
 
 ```bash
 cd frontend
@@ -303,7 +303,7 @@ npm install
 npm run dev
 ```
 
-***REMOVED******REMOVED******REMOVED*** 5. 访问
+### 5. 访问
 
 浏览器打开 **http://localhost:5173**
 
@@ -311,45 +311,45 @@ npm run dev
 
 <br />
 
-***REMOVED******REMOVED*** 项目结构
+## 项目结构
 
 ```
 EasyStudy/
-├── frontend/                ***REMOVED*** React 前端 (IDE 风格工作台)
+├── frontend/                # React 前端 (IDE 风格工作台)
 │   └── src/
-│       ├── components/      ***REMOVED*** 组件 (布局/画像/学习路径/AI对话)
-│       ├── views/           ***REMOVED*** 页面视图
-│       ├── stores/          ***REMOVED*** Zustand 状态管理
-│       ├── services/        ***REMOVED*** API 调用层
-│       └── types/           ***REMOVED*** TypeScript 类型定义
+│       ├── components/      # 组件 (布局/画像/学习路径/AI对话)
+│       ├── views/           # 页面视图
+│       ├── stores/          # Zustand 状态管理
+│       ├── services/        # API 调用层
+│       └── types/           # TypeScript 类型定义
 │
-├── backend-spring/          ***REMOVED*** Spring Boot API 网关
+├── backend-spring/          # Spring Boot API 网关
 │   └── src/main/java/com/easystudy/
-│       ├── controller/      ***REMOVED*** REST 控制器 + AI 代理
-│       ├── service/         ***REMOVED*** 业务逻辑
-│       ├── repository/      ***REMOVED*** JPA 数据访问
-│       ├── model/           ***REMOVED*** 实体类
-│       ├── dto/             ***REMOVED*** 数据传输对象
-│       ├── security/        ***REMOVED*** JWT + 过滤器
-│       ├── config/          ***REMOVED*** 安全/文件/MinIO 配置
-│       └── exception/       ***REMOVED*** 全局异常处理
+│       ├── controller/      # REST 控制器 + AI 代理
+│       ├── service/         # 业务逻辑
+│       ├── repository/      # JPA 数据访问
+│       ├── model/           # 实体类
+│       ├── dto/             # 数据传输对象
+│       ├── security/        # JWT + 过滤器
+│       ├── config/          # 安全/文件/MinIO 配置
+│       └── exception/       # 全局异常处理
 │
-├── backend-ai/              ***REMOVED*** FastAPI AI 服务
-│   ├── routers/             ***REMOVED*** 画像/路径/资源/对话 API
-│   ├── graphs/              ***REMOVED*** LangGraph Agent 定义
-│   ├── services/            ***REMOVED*** 数据库/向量库/MinIO 访问层
-│   ├── prompts/             ***REMOVED*** LLM Prompt 模板
-│   └── tools/               ***REMOVED*** AI 工具函数
+├── backend-ai/              # FastAPI AI 服务
+│   ├── routers/             # 画像/路径/资源/对话 API
+│   ├── graphs/              # LangGraph Agent 定义
+│   ├── services/            # 数据库/向量库/MinIO 访问层
+│   ├── prompts/             # LLM Prompt 模板
+│   └── tools/               # AI 工具函数
 │
-├── docker-compose.yml       ***REMOVED*** 全容器化部署
-├── 启动.bat / 启动.sh       ***REMOVED*** 一键启动脚本
-├── .env.example             ***REMOVED*** 环境变量模板
-└── scripts/                 ***REMOVED*** 初始化 SQL 等辅助脚本
+├── docker-compose.yml       # 全容器化部署
+├── 启动.bat / 启动.sh       # 一键启动脚本
+├── .env.example             # 环境变量模板
+└── scripts/                 # 初始化 SQL 等辅助脚本
 ```
 
 <br />
 
-***REMOVED******REMOVED*** 效果展示
+## 效果展示
 
 | 页面 | 截图 |
 |------|------|
@@ -362,7 +362,7 @@ EasyStudy/
 
 <br />
 
-***REMOVED******REMOVED*** 许可
+## 许可
 
 本项目仅供个人学习与教育用途。
 

@@ -69,10 +69,10 @@ export default function CompanionView() {
         setDocLoading(true);
         materialService.getMaterialContent(currentFile.id)
           .then((data) => {
-            setDocContent(data.content || '***REMOVED*** 暂无内容\n\n该课件内容正在准备中...');
+            setDocContent(data.content || ' 暂无内容\n\n该课件内容正在准备中...');
           })
           .catch(() => {
-            setDocContent('***REMOVED*** 加载失败\n\n无法加载课件内容，请检查网络连接。');
+            setDocContent(' 加载失败\n\n无法加载课件内容，请检查网络连接。');
           })
           .finally(() => setDocLoading(false));
       }
@@ -304,7 +304,7 @@ export default function CompanionView() {
               style={{
                 padding: '2px 20px',
                 fontSize: 10,
-                color: '***REMOVED***b55738',
+                color: 'b55738',
                 fontFamily: 'var(--font-sans)',
               }}
             >
@@ -397,7 +397,7 @@ const DocContent = memo(function DocContent({ content }: { content: string }) {
                 <code
                   style={{
                     background: 'var(--parchment)',
-                    color: '***REMOVED***b55738',
+                    color: 'b55738',
                     padding: '1px 5px',
                     borderRadius: 3,
                     fontFamily: 'var(--font-mono)',

@@ -139,9 +139,9 @@ export default function PathTreeCanvas({ nodes, onStatusChange }: Props) {
             const data = node.data as any;
             const status = data?.node?.status as PathNodeStatus | undefined;
             switch (status) {
-              case 'completed': return '***REMOVED***5b8c5a';
-              case 'in_progress': return '***REMOVED***c96442';
-              default: return '***REMOVED***b0aea5';
+              case 'completed': return '5b8c5a';
+              case 'in_progress': return 'c96442';
+              default: return 'b0aea5';
             }
           }}
           maskColor="rgba(42,27,24,0.06)"

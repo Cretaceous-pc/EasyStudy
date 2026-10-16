@@ -5,23 +5,23 @@
   - PROMPT_PATH_GENERATE → PathGenState.generate_path
 """
 
-***REMOVED*** ── 学习路径规划 ──
+# ── 学习路径规划 ──
 PROMPT_PATH_GENERATE = """\
 你是一位课程教学设计专家。请根据学生的偏好问卷为其规划个性化的学习路径。路径生成完全基于问卷答案，不依赖外部课程数据。
 
-***REMOVED******REMOVED*** 学生画像（仅作辅助参考，非决定性因素）
+## 学生画像（仅作辅助参考，非决定性因素）
 - 知识基础: {profile_knowledge_base}
 - 学习目标: {profile_learning_goal}
 - 学习节奏: {profile_learning_pace}
 
-***REMOVED******REMOVED*** 用户偏好问卷（核心依据，完全围绕此生成路径）
+## 用户偏好问卷（核心依据，完全围绕此生成路径）
 - 学习目的: {q_purpose}
 - 每天学习时间: {q_daily_study_time}
 - 期望深度: {q_depth}
 - 当前水平: {q_level}
 - 想学习的具体内容（用户自述，最重要！）: {q_topic}
 
-***REMOVED******REMOVED*** 路径规划规则
+## 路径规划规则
 1. **最重要**：仔细理解"想学习的具体内容"中用户的自述，这是最核心的需求信号。用户提到的知识点、工具、场景必须出现在路径中
 2. **树状结构（关键）**：路径必须是分支树，不是直线链条。做法：
    - 先放置 1-2 个公共基础节点（dependencies=[]）
@@ -35,7 +35,7 @@ PROMPT_PATH_GENERATE = """\
    - 1-2小时：每个节点 30-50 分钟
    - 2小时以上：每个节点 40-60 分钟
 
-***REMOVED******REMOVED*** 输出 JSON
+## 输出 JSON
 {{
   "items": [
     {{
@@ -60,13 +60,13 @@ PROMPT_PATH_GENERATE = """\
   ]
 }}
 
-***REMOVED******REMOVED*** 依赖规则（必须严格遵守，形成树状拓扑）
+## 依赖规则（必须严格遵守，形成树状拓扑）
 - dependencies 为该节点的前置节点 seq_order 列表
 - 第一个节点 dependencies 为空数组 []
 - 分支节点的 dependencies 指向其前置公共节点；收束节点的 dependencies 包含多条分支末端的 seq_order
 - 禁止每个节点只依赖前一个节点（即禁止 dependencies: [n-1] 的线性链条）
 
-***REMOVED******REMOVED*** 树状结构示例（12节点：1个根→3条分支各2-3节点→1个收束）
+## 树状结构示例（12节点：1个根→3条分支各2-3节点→1个收束）
 - seq_order=1: dependencies=[], title="公共基础"              ← 根
 - seq_order=2: dependencies=[1], title="分支A-基础"            ← 分支A
 - seq_order=3: dependencies=[1], title="分支B-基础"            ← 分支B
@@ -80,7 +80,7 @@ PROMPT_PATH_GENERATE = """\
 - seq_order=11: dependencies=[9], title="总复习-下"            ← 综合复习
 - seq_order=12: dependencies=[10,11], title="综合测验"         ← 收束
 
-***REMOVED******REMOVED*** 规则
+## 规则
 - 至少生成 12 个节点
 - 至少包含 3 条并行分支，每条分支 2-3 个节点
 - 严格按 JSON 格式输出，不要任何解释
@@ -88,7 +88,7 @@ PROMPT_PATH_GENERATE = """\
 """
 
 
-***REMOVED*** ── 节点教学内容生成 ──
+# ── 节点教学内容生成 ──
 PROMPT_NODE_TEACH = """\
 你是课程教学助手。为以下学习节点撰写结构化的教学内容。
 
@@ -101,11 +101,11 @@ PROMPT_NODE_TEACH = """\
 
 写作要求:
 - 使用 Markdown 格式输出
-- beginner: 用生活类比引入（***REMOVED******REMOVED******REMOVED*** 引入），语言通俗易懂，多举实际例子
-- intermediate: 讲清核心概念和工作原理（***REMOVED******REMOVED******REMOVED*** 核心概念），配 1-2 个应用实例（***REMOVED******REMOVED******REMOVED*** 应用实例）
-- advanced: 深入分析底层机制（***REMOVED******REMOVED******REMOVED*** 原理分析），展示推导思路，有一定挑战性
+- beginner: 用生活类比引入（### 引入），语言通俗易懂，多举实际例子
+- intermediate: 讲清核心概念和工作原理（### 核心概念），配 1-2 个应用实例（### 应用实例）
+- advanced: 深入分析底层机制（### 原理分析），展示推导思路，有一定挑战性
 - 正文 500-2000 字，中文
-- 使用 ***REMOVED******REMOVED*** 和 ***REMOVED******REMOVED******REMOVED*** 标题分层，段落之间用空行分隔
+- 使用 ## 和 ### 标题分层，段落之间用空行分隔
 - 涉及代码时用 ``` 代码块包裹并标注语言
 - 重点内容用 **粗体** 强调
 - 不要在开头重复节点标题（标题已在弹窗顶部展示）

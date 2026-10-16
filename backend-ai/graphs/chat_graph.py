@@ -16,39 +16,39 @@ logger = logging.getLogger(__name__)
 
 
 class ChatState(TypedDict):
-    ***REMOVED*** ── 请求上下文 ──
+    # ── 请求上下文 ──
     student_id: int
     course_id: int
     course_title: str
     conversation_id: Optional[int]
 
-    ***REMOVED*** ── 当前轮次 ──
+    # ── 当前轮次 ──
     user_message: str
     history_summary: str
-    intent: Optional[str]  ***REMOVED*** "chat" | "generate_resource" | "update_profile" | "get_path"
+    intent: Optional[str]  # "chat" | "generate_resource" | "update_profile" | "get_path"
 
-    ***REMOVED*** ── 学生上下文 ──
+    # ── 学生上下文 ──
     profile: dict
     enrolled_courses: List[dict]
 
-    ***REMOVED*** ── 检索上下文 ──
+    # ── 检索上下文 ──
     retrieved_docs: List[dict]
 
-    ***REMOVED*** ── 生成结果 ──
+    # ── 生成结果 ──
     assistant_reply: str
     reply_chunks: List[str]
     actions: List[dict]
 
-    ***REMOVED*** ── 子图委派 ──
+    # ── 子图委派 ──
     resource_gen_request: Optional[dict]
     resource_gen_result: Optional[dict]
 
-    ***REMOVED*** ── 状态标记 ──
+    # ── 状态标记 ──
     error: Optional[str]
     done: bool
 
 
-***REMOVED*** ── 辅助函数 ──
+# ── 辅助函数 ──
 
 def _format_profile_for_prompt(profile: dict) -> dict:
     """从画像 JSONB 中提取各维度的 label，格式化为 Prompt 变量"""
@@ -79,7 +79,7 @@ def _has_profile(profile: dict) -> bool:
     return any(profile.get(d, {}).get("value") for d in dimensions)
 
 
-***REMOVED*** ── 节点函数 ──
+# ── 节点函数 ──
 
 def guard_check(state: ChatState) -> dict:
     """鉴权 + 课程权限校验 — 查询 DB 验证选课关系"""
@@ -95,7 +95,7 @@ def guard_check(state: ChatState) -> dict:
         if not check_enrollment(student_id, course_id):
             return {"error": f"未选修该课程(course_id={course_id})，无法发起对话"}
 
-        ***REMOVED*** 同时加载课程标题
+        # 同时加载课程标题
         title = get_course_title(course_id) or ""
         return {"course_title": title}
     except Exception as e:
@@ -124,7 +124,7 @@ async def classify_intent(state: ChatState) -> dict:
             timeout=15.0,
         )
         intent = result.strip().strip('"').strip("'")
-        ***REMOVED*** 规范化：只保留已知的意图标签
+        # 规范化：只保留已知的意图标签
         valid_intents = {"chat", "generate_resource", "update_profile", "get_path"}
         if intent not in valid_intents:
             logger.warning(f"Unknown intent '{intent}', defaulting to 'chat'")
@@ -169,10 +169,10 @@ async def generate_answer(state: ChatState) -> dict:
     retrieved_docs = state.get("retrieved_docs", [])
 
     try:
-        ***REMOVED*** 格式化 RAG 上下文
+        # 格式化 RAG 上下文
         rag_context = format_retrieved_docs(retrieved_docs)
 
-        ***REMOVED*** 判断是否有画像：无画像 → 冷启动引导；有画像 → RAG 增强问答
+        # 判断是否有画像：无画像 → 冷启动引导；有画像 → RAG 增强问答
         has_profile = _has_profile(profile)
 
         if not has_profile:
@@ -193,7 +193,7 @@ async def generate_answer(state: ChatState) -> dict:
             )
             system = f"你是课程「{course_title}」的 AI 助教，只能基于课程资料回答问题。"
 
-        ***REMOVED*** 流式收集 chunks，失败则降级为非流式
+        # 流式收集 chunks，失败则降级为非流式
         chunks = []
         try:
             async for chunk in deepseek_stream(
@@ -207,7 +207,7 @@ async def generate_answer(state: ChatState) -> dict:
             from services.deepseek_client import deepseek_generate
             reply_text = await deepseek_generate(prompt=prompt, system=system, model="deepseek-chat")
             if reply_text:
-                ***REMOVED*** 模拟流式分块
+                # 模拟流式分块
                 for char in reply_text:
                     chunks.append(char)
             else:
@@ -247,18 +247,18 @@ async def save_messages(state: ChatState) -> dict:
     result = {}
 
     try:
-        ***REMOVED*** 如果没有对话 ID，创建新对话
+        # 如果没有对话 ID，创建新对话
         if not conversation_id:
             title = user_message[:30] if len(user_message) > 30 else user_message
             conversation_id = create_conversation(student_id, course_id, title)
             result["conversation_id"] = conversation_id
             logger.info(f"[db] created conversation id={conversation_id}")
 
-        ***REMOVED*** 保存用户消息
+        # 保存用户消息
         save_message(conversation_id, "user", user_message)
         logger.info(f"[db] saved user message in conv={conversation_id}")
 
-        ***REMOVED*** 保存助手回复
+        # 保存助手回复
         if assistant_reply:
             save_message(conversation_id, "assistant", assistant_reply)
             logger.info(f"[db] saved assistant reply in conv={conversation_id}")
@@ -266,7 +266,7 @@ async def save_messages(state: ChatState) -> dict:
     except Exception as e:
         logger.error(f"[db] save messages failed: {e}", exc_info=True)
 
-    ***REMOVED*** LangGraph 要求节点必须写入至少一个 State 字段
+    # LangGraph 要求节点必须写入至少一个 State 字段
     if not result:
         result = {"done": True}
     return result
@@ -283,15 +283,15 @@ async def maybe_update_profile(state: ChatState) -> dict:
     actions = []
 
     try:
-        ***REMOVED*** 加载当前画像
+        # 加载当前画像
         profile_data = load_profile(student_id, course_id)
         current_profile = profile_data["profile"]
         current_version = profile_data["version"]
 
-        ***REMOVED*** 获取最近对话消息
+        # 获取最近对话消息
         messages = get_recent_conversation_messages(student_id, course_id, limit=10)
 
-        ***REMOVED*** 决定是否触发：画像为空（首次）或对话轮次 >= 3 且有足够内容
+        # 决定是否触发：画像为空（首次）或对话轮次 >= 3 且有足够内容
         should_trigger = False
         if not current_profile or current_version == 0:
             should_trigger = True
@@ -301,7 +301,7 @@ async def maybe_update_profile(state: ChatState) -> dict:
             logger.info(f"[profile] conversation trigger: {len(messages)} recent messages")
 
         if should_trigger:
-            ***REMOVED*** 构造画像状态
+            # 构造画像状态
             profile_state: ProfileUpdateState = {
                 "student_id": student_id,
                 "course_id": course_id,
@@ -317,7 +317,7 @@ async def maybe_update_profile(state: ChatState) -> dict:
                 "new_version": None,
             }
 
-            ***REMOVED*** 直接 await 异步调用
+            # 直接 await 异步调用
             profile_app = compile_profile_graph()
             result = await profile_app.ainvoke(profile_state)
 
@@ -350,7 +350,7 @@ async def delegate_resource_node(state: ChatState) -> dict:
     profile = state.get("profile", {})
 
     try:
-        ***REMOVED*** 构造资源生成状态：默认生成全部 5 种类型
+        # 构造资源生成状态：默认生成全部 5 种类型
         resource_state: ResourceGenState = {
             "student_id": student_id,
             "course_id": course_id,
@@ -391,7 +391,7 @@ async def delegate_resource_node(state: ChatState) -> dict:
         }
 
 
-***REMOVED*** ── 条件边函数 ──
+# ── 条件边函数 ──
 
 def after_guard(state: ChatState) -> str:
     """guard 检查后：失败→END，成功→route_intent"""
@@ -409,13 +409,13 @@ def after_route(state: ChatState) -> str:
     return "retrieve"
 
 
-***REMOVED*** ── 编译函数 ──
+# ── 编译函数 ──
 
 def compile_chat_graph():
     """编译 ChatState 图"""
     graph = StateGraph(ChatState)
 
-    ***REMOVED*** 添加节点
+    # 添加节点
     graph.add_node("guard", guard_check)
     graph.add_node("route_intent", classify_intent)
     graph.add_node("retrieve", retrieve_context)
@@ -424,10 +424,10 @@ def compile_chat_graph():
     graph.add_node("trigger_profile_update", maybe_update_profile)
     graph.add_node("delegate_resource", delegate_resource_node)
 
-    ***REMOVED*** 入口
+    # 入口
     graph.set_entry_point("guard")
 
-    ***REMOVED*** 边
+    # 边
     graph.add_conditional_edges("guard", after_guard, {
         "route_intent": "route_intent",
         "__end__": END,

@@ -4,10 +4,10 @@
 使用纯 Python 实现的递归文本切割，避免 langchain_text_splitters 依赖冲突。
 """
 
-***REMOVED*** ── 经验值参数 ──
+# ── 经验值参数 ──
 CHUNK_SIZE = 1500
 CHUNK_OVERLAP = 300
-SEPARATORS = ["\n\n***REMOVED******REMOVED*** ", "\n\n***REMOVED******REMOVED******REMOVED*** ", "\n\n", "\n", "。", ".", " "]
+SEPARATORS = ["\n\n## ", "\n\n### ", "\n\n", "\n", "。", ".", " "]
 
 
 def get_splitter(
@@ -30,21 +30,21 @@ def get_splitter(
         if len(text) <= chunk_size:
             return [text] if text.strip() else []
 
-        ***REMOVED*** 尝试按当前分隔符分割
+        # 尝试按当前分隔符分割
         sep = seps[0] if seps else None
         remaining_seps = seps[1:] if len(seps) > 1 else []
 
         if sep is None:
-            ***REMOVED*** 无可用的分隔符，强制按长度切割
+            # 无可用的分隔符，强制按长度切割
             return _split_by_length(text, chunk_size, chunk_overlap)
 
         parts = text.split(sep)
 
         if len(parts) == 1:
-            ***REMOVED*** 当前分隔符无法分割，尝试下一个
+            # 当前分隔符无法分割，尝试下一个
             return split_recursive(text, remaining_seps)
 
-        ***REMOVED*** 合并过短的片段，递归处理过长的片段
+        # 合并过短的片段，递归处理过长的片段
         result = []
         current = ""
         for part in parts:
@@ -54,7 +54,7 @@ def get_splitter(
             else:
                 if current.strip():
                     result.append(current)
-                ***REMOVED*** 递归处理剩余的过长片段
+                # 递归处理剩余的过长片段
                 if len(part) > chunk_size:
                     sub_chunks = split_recursive(part, remaining_seps)
                     result.extend(sub_chunks)
@@ -65,7 +65,7 @@ def get_splitter(
         if current.strip():
             result.append(current)
 
-        ***REMOVED*** 添加重叠
+        # 添加重叠
         if chunk_overlap > 0 and len(result) > 1:
             result = _add_overlap(result, chunk_overlap)
 
@@ -91,7 +91,7 @@ def _add_overlap(chunks: list[str], overlap: int) -> list[str]:
         return chunks
     result = [chunks[0]]
     for i in range(1, len(chunks)):
-        ***REMOVED*** 从前一个 chunk 尾部取 overlap 字符追加到当前 chunk 头部
+        # 从前一个 chunk 尾部取 overlap 字符追加到当前 chunk 头部
         prev = chunks[i - 1]
         if len(prev) > overlap:
             result.append(prev[-overlap:] + chunks[i])

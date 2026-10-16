@@ -1,13 +1,13 @@
-***REMOVED*** ── 凭证与本地数据：绝不打进镜像 ──
+# ── 凭证与本地数据：绝不打进镜像 ──
 .env
 .env.*
 !.env.example
 
-***REMOVED*** 本地向量库与缓存数据（可能数百 MB）
+# 本地向量库与缓存数据（可能数百 MB）
 chroma_data/
 *.sqlite3
 
-***REMOVED*** Python 产物
+# Python 产物
 __pycache__/
 *.pyc
 *.pyo
@@ -17,25 +17,25 @@ venv/
 .mypy_cache/
 .ruff_cache/
 
-***REMOVED*** 备份文件（services/db.py.bak 与 db.py 内容重复）
+# 备份文件（services/db.py.bak 与 db.py 内容重复）
 *.bak
 *.orig
 *.rej
 
-***REMOVED*** 日志与临时文件
+# 日志与临时文件
 *.log
 logs/
 tmp/
 .git-tmp/
 
-***REMOVED*** 编辑器 / 系统
+# 编辑器 / 系统
 .idea/
 .vscode/
 *.swp
 .DS_Store
 Thumbs.db
 
-***REMOVED*** 版本控制与文档
+# 版本控制与文档
 .git/
 .gitignore
 README.md

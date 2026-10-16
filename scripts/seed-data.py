@@ -1,4 +1,4 @@
-***REMOVED***!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 easyStudy — 测试数据填充脚本
 产出: 1 管理员 + 1 教师 + 3 学生 + 1 门课程 + 3 章资料
@@ -10,23 +10,23 @@ import sys
 import psycopg2
 from psycopg2.extras import Json
 
-***REMOVED*** ── 连接配置（全部从环境变量读取，无任何硬编码回退值） ──
-***REMOVED*** 运行前请先加载 .env，例如:
-***REMOVED***   set -a && . ./.env && set +a && python scripts/seed-data.py
+# ── 连接配置（全部从环境变量读取，无任何硬编码回退值） ──
+# 运行前请先加载 .env，例如:
+#   set -a && . ./.env && set +a && python scripts/seed-data.py
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "easystudy")
 DB_USER = os.getenv("DB_USER", "easystudy")
 
-***REMOVED*** 口令不做默认值回退：缺失时立刻失败，避免悄悄连上错误的库
+# 口令不做默认值回退：缺失时立刻失败，避免悄悄连上错误的库
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
 if not DB_PASSWORD:
     print("错误: 未设置 DB_PASSWORD 环境变量。请先加载 .env（见本文件顶部说明）。", file=sys.stderr)
     sys.exit(1)
 
-***REMOVED*** BCrypt 哈希值 — 明文均为 "Test@12345"（仅用于本地/演示环境的种子账号）
-***REMOVED*** 生成方式: bcrypt.hashpw(b"Test@12345", bcrypt.gensalt(rounds=10))
-***REMOVED*** 注意: 公开部署前请修改这些种子账号的口令，或干脆不要执行本脚本。
+# BCrypt 哈希值 — 明文均为 "Test@12345"（仅用于本地/演示环境的种子账号）
+# 生成方式: bcrypt.hashpw(b"Test@12345", bcrypt.gensalt(rounds=10))
+# 注意: 公开部署前请修改这些种子账号的口令，或干脆不要执行本脚本。
 BCRYPT_TEST_PASSWORD = "$2b$10$FgjkbF1MuPvid5VJMxr0me3oLDZU2EgdQZ5dl7z2GmDkrO39p3qj6"
 
 
@@ -40,7 +40,7 @@ def get_connection():
 def seed_users(cur):
     """插入 1 管理员 + 1 教师 + 3 学生"""
     users = [
-        ***REMOVED*** (username, password_hash, email, display_name, role_name)
+        # (username, password_hash, email, display_name, role_name)
         ("admin",        BCRYPT_TEST_PASSWORD, "admin@easystudy.edu",    "系统管理员", "ROLE_ADMIN"),
         ("teacher_wang", BCRYPT_TEST_PASSWORD, "wang@easystudy.edu",     "王老师",     "ROLE_TEACHER"),
         ("student_li",   BCRYPT_TEST_PASSWORD, "li@easystudy.edu",       "李同学",     "ROLE_STUDENT"),
@@ -67,7 +67,7 @@ def seed_users(cur):
             )
             print(f"  ✓ 用户 {username} (id={user_id}, role={role_name})")
         else:
-            ***REMOVED*** 用户已存在，跳过
+            # 用户已存在，跳过
             user_id = _get_user_id(cur, username)
             print(f"  - 用户 {username} 已存在 (id={user_id})，跳过")
 
@@ -138,7 +138,7 @@ def main():
         sys.exit(1)
 
     try:
-        ***REMOVED*** 幂等插入 — 不删除已有数据，已存在的记录自动跳过
+        # 幂等插入 — 不删除已有数据，已存在的记录自动跳过
         print("\n── 填充用户（幂等，已存在则跳过）──")
         user_ids = seed_users(cur)
 
@@ -155,7 +155,7 @@ def main():
         conn.commit()
         print("\n✅ 测试数据填充完成！")
 
-        ***REMOVED*** 验证
+        # 验证
         print("\n── 验证 ──")
         for table in ["users", "roles", "user_roles", "courses", "course_enrollments", "course_materials"]:
             cur.execute(f"SELECT COUNT(*) FROM {table}")

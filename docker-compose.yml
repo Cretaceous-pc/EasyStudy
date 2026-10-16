@@ -1,26 +1,26 @@
-***REMOVED*** ─────────────────────────────────────────────────────────
-***REMOVED*** easyStudy — Docker Compose (方案A: 全容器化，Linux 服务器默认)
-***REMOVED***
-***REMOVED*** 使用方式:
-***REMOVED***   生产/部署:  docker compose up -d              → 启动全部服务
-***REMOVED***   开发:       仅启动中间件 → docker compose up -d postgres redis chroma minio
-***REMOVED***              应用在原生终端启动（./启动.sh 或 启动.bat）→ 连接 localhost
-***REMOVED***
-***REMOVED*** 安全基线（本轮修复）:
-***REMOVED***   1. 中间件端口默认只绑定 127.0.0.1，不再对局域网/公网暴露。
-***REMOVED***      需要从别的机器访问时，显式设置 BIND_ADDR=0.0.0.0 并自行加防火墙。
-***REMOVED***   2. Redis 启用 requirepass（口令来自 .env 的 REDIS_PASSWORD）。
-***REMOVED***   3. FastAPI 不再发布端口 —— 它没有独立鉴权，身份由 Spring Boot 网关注入，
-***REMOVED***      任何能直连它的人都可以用 X-User-Id 头伪造成任意用户。
-***REMOVED***   4. 所有敏感值来自 .env（被 .gitignore 忽略），compose 内不写任何默认口令。
-***REMOVED*** ─────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────
+# easyStudy — Docker Compose (方案A: 全容器化，Linux 服务器默认)
+#
+# 使用方式:
+#   生产/部署:  docker compose up -d              → 启动全部服务
+#   开发:       仅启动中间件 → docker compose up -d postgres redis chroma minio
+#              应用在原生终端启动（./启动.sh 或 启动.bat）→ 连接 localhost
+#
+# 安全基线（本轮修复）:
+#   1. 中间件端口默认只绑定 127.0.0.1，不再对局域网/公网暴露。
+#      需要从别的机器访问时，显式设置 BIND_ADDR=0.0.0.0 并自行加防火墙。
+#   2. Redis 启用 requirepass（口令来自 .env 的 REDIS_PASSWORD）。
+#   3. FastAPI 不再发布端口 —— 它没有独立鉴权，身份由 Spring Boot 网关注入，
+#      任何能直连它的人都可以用 X-User-Id 头伪造成任意用户。
+#   4. 所有敏感值来自 .env（被 .gitignore 忽略），compose 内不写任何默认口令。
+# ─────────────────────────────────────────────────────────
 
 services:
-  ***REMOVED*** ═══════════════════════════════════════════════════════
-  ***REMOVED*** 中间件层
-  ***REMOVED*** ═══════════════════════════════════════════════════════
+  # ═══════════════════════════════════════════════════════
+  # 中间件层
+  # ═══════════════════════════════════════════════════════
 
-  ***REMOVED*** ── 数据库 ──
+  # ── 数据库 ──
   postgres:
     image: postgres:16-alpine
     container_name: easystudy-postgres
@@ -40,12 +40,12 @@ services:
       retries: 5
     restart: unless-stopped
 
-  ***REMOVED*** ── 缓存 ──
+  # ── 缓存 ──
   redis:
     image: redis:7-alpine
     container_name: easystudy-redis
-    ***REMOVED*** 无口令的 Redis 发布到宿主机等同于可被写文件的近 RCE（CONFIG SET + SAVE）。
-    ***REMOVED*** 口令必须来自 .env；compose 不提供默认值，缺失时启动即失败（fail closed）。
+    # 无口令的 Redis 发布到宿主机等同于可被写文件的近 RCE（CONFIG SET + SAVE）。
+    # 口令必须来自 .env；compose 不提供默认值，缺失时启动即失败（fail closed）。
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD 未在 .env 中设置}"]
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 未在 .env 中设置}
@@ -60,10 +60,10 @@ services:
       retries: 5
     restart: unless-stopped
 
-  ***REMOVED*** ── 向量数据库 ──
+  # ── 向量数据库 ──
   chroma:
-    ***REMOVED*** 锁具体版本，不用 :latest —— 该镜像已从 python 基线改为 Rust 二进制，
-    ***REMOVED*** :latest 漂移会静默改变镜像内容（历史教训：健康检查因此失效）。
+    # 锁具体版本，不用 :latest —— 该镜像已从 python 基线改为 Rust 二进制，
+    # :latest 漂移会静默改变镜像内容（历史教训：健康检查因此失效）。
     image: chromadb/chroma:1.0.0
     container_name: easystudy-chroma
     ports:
@@ -73,10 +73,10 @@ services:
     environment:
       IS_PERSISTENT: "TRUE"
       ANONYMIZED_TELEMETRY: "FALSE"
-    ***REMOVED*** 注意: 新版 chromadb 镜像是 debian-slim + Rust 二进制，镜像内既没有 perl，
-    ***REMOVED*** 也没有 curl/wget/python。原健康检查依赖 perl，必然失败并卡死 fastapi 的
-    ***REMOVED*** depends_on。这里只用 bash 本身（已确认镜像内含 /usr/bin/bash）与内建
-    ***REMOVED*** read -t，不依赖 timeout/coreutils 等外部命令。
+    # 注意: 新版 chromadb 镜像是 debian-slim + Rust 二进制，镜像内既没有 perl，
+    # 也没有 curl/wget/python。原健康检查依赖 perl，必然失败并卡死 fastapi 的
+    # depends_on。这里只用 bash 本身（已确认镜像内含 /usr/bin/bash）与内建
+    # read -t，不依赖 timeout/coreutils 等外部命令。
     healthcheck:
       test: ["CMD", "bash", "-c", "read -t 3 -u 1 <> /dev/tcp/127.0.0.1/8000"]
       interval: 10s
@@ -97,25 +97,25 @@ services:
       - production
     restart: unless-stopped
 
-  ***REMOVED*** ── 文件存储 ──
+  # ── 文件存储 ──
   minio:
-    ***REMOVED*** ⚠️ 上游 minio/minio 在 Docker Hub 已不可匿名拉取（manifests 返回 401，
-    ***REMOVED***    quay.io/minio/minio 同样 401）。这里改用社区归档镜像维持可用性。
-    ***REMOVED***    如需自建镜像源，覆盖 MINIO_IMAGE 环境变量即可。
-    ***REMOVED***    未实机验证：本镜像的 MINIO_ROOT_USER/PASSWORD 兼容性由 Bitnami 约定保证，
-    ***REMOVED***    首次启动请确认 springboot/fastapi 能正常读写对象存储。
+    # ⚠️ 上游 minio/minio 在 Docker Hub 已不可匿名拉取（manifests 返回 401，
+    #    quay.io/minio/minio 同样 401）。这里改用社区归档镜像维持可用性。
+    #    如需自建镜像源，覆盖 MINIO_IMAGE 环境变量即可。
+    #    未实机验证：本镜像的 MINIO_ROOT_USER/PASSWORD 兼容性由 Bitnami 约定保证，
+    #    首次启动请确认 springboot/fastapi 能正常读写对象存储。
     image: ${MINIO_IMAGE:-bitnamilegacy/minio:latest}
     container_name: easystudy-minio
-    ***REMOVED*** 以 root 运行以便挂载 ./data/minio（宿主侧 bind mount 的属主无法预设）。
-    ***REMOVED*** 若改用命名卷，可删掉此行恢复非 root 运行。
+    # 以 root 运行以便挂载 ./data/minio（宿主侧 bind mount 的属主无法预设）。
+    # 若改用命名卷，可删掉此行恢复非 root 运行。
     user: "0:0"
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:?MINIO_USER 未在 .env 中设置}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:?MINIO_PASSWORD 未在 .env 中设置}
     ports:
-      - "${BIND_ADDR:-127.0.0.1}:9000:9000"   ***REMOVED*** S3 API
-      - "${BIND_ADDR:-127.0.0.1}:9001:9001"   ***REMOVED*** Web Console
+      - "${BIND_ADDR:-127.0.0.1}:9000:9000"    # S3 API
+      - "${BIND_ADDR:-127.0.0.1}:9001:9001"    # Web Console
     volumes:
       - ./data/minio:/data
     healthcheck:
@@ -126,11 +126,11 @@ services:
       start_period: 15s
     restart: unless-stopped
 
-  ***REMOVED*** ═══════════════════════════════════════════════════════
-  ***REMOVED*** 应用层
-  ***REMOVED*** ═══════════════════════════════════════════════════════
+  # ═══════════════════════════════════════════════════════
+  # 应用层
+  # ═══════════════════════════════════════════════════════
 
-  ***REMOVED*** ── Spring Boot 主后端 ──
+  # ── Spring Boot 主后端 ──
   springboot:
     build: ./backend-spring
     container_name: easystudy-springboot
@@ -150,10 +150,10 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_USER: ${MINIO_USER}
       MINIO_PASSWORD: ${MINIO_PASSWORD}
-      ***REMOVED*** 浏览器同源访问时 Origin 为 http://localhost（前端由 nginx 在 80 端口提供）
+      # 浏览器同源访问时 Origin 为 http://localhost（前端由 nginx 在 80 端口提供）
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET 未在 .env 中设置}
-      ***REMOVED*** 密码重置邮件 —— 原先完全未传递，导致容器化部署下"忘记密码"静默失效
+      # 密码重置邮件 —— 原先完全未传递，导致容器化部署下"忘记密码"静默失效
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
@@ -167,11 +167,11 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  ***REMOVED*** ── FastAPI AI 后端 ──
-  ***REMOVED***
-  ***REMOVED*** 不发布端口（原为 "8000:8000"）。它只信任网关注入的 X-User-Id / X-User-Role，
-  ***REMOVED*** 自身不做鉴权，一旦可从宿主机直连即可伪造成任意用户（含管理员）。
-  ***REMOVED*** Spring Boot 通过 compose 内部网络以 http://fastapi:8000 访问它。
+  # ── FastAPI AI 后端 ──
+  #
+  # 不发布端口（原为 "8000:8000"）。它只信任网关注入的 X-User-Id / X-User-Role，
+  # 自身不做鉴权，一旦可从宿主机直连即可伪造成任意用户（含管理员）。
+  # Spring Boot 通过 compose 内部网络以 http://fastapi:8000 访问它。
   fastapi:
     build: ./backend-ai
     container_name: easystudy-fastapi
@@ -216,21 +216,21 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  ***REMOVED*** ── React 前端 (Nginx) ──
+  # ── React 前端 (Nginx) ──
   frontend:
     build:
       context: ./frontend
       args:
-        ***REMOVED*** 需要国内镜像加速时覆盖，例如:
-        ***REMOVED***   NPM_REGISTRY=https://registry.npmmirror.com docker compose build frontend
+        # 需要国内镜像加速时覆盖，例如:
+        #   NPM_REGISTRY=https://registry.npmmirror.com docker compose build frontend
         NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
     container_name: easystudy-frontend
     ports:
-      ***REMOVED*** 容器内以非 root(101) 运行，只能监听 8080
+      # 容器内以非 root(101) 运行，只能监听 8080
       - "80:8080"
     depends_on:
       springboot:
         condition: service_started
     restart: unless-stopped
 
-***REMOVED*** 数据持久化到 ./data/ 目录（bind mount）
+# 数据持久化到 ./data/ 目录（bind mount）

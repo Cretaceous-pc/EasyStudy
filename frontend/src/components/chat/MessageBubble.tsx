@@ -221,7 +221,7 @@ function MarkdownContent({ content }: { content: string }) {
               <code
                 style={{
                   background: 'rgba(201,100,66,0.07)',
-                  color: '***REMOVED***b55738',
+                  color: 'b55738',
                   padding: '1px 5px',
                   borderRadius: 3,
                   fontFamily: 'var(--font-mono)',

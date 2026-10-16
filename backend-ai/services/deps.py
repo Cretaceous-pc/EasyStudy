@@ -23,16 +23,16 @@ from services.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-***REMOVED*** 强制要求这些 claim 存在。缺少 exp 的 token 原本永不过期 ——
-***REMOVED*** PyJWT 在 options={"verify_exp": True} 下对"没有 exp"的 token 并不报错。
+# 强制要求这些 claim 存在。缺少 exp 的 token 原本永不过期 ——
+# PyJWT 在 options={"verify_exp": True} 下对"没有 exp"的 token 并不报错。
 _REQUIRED_CLAIMS = ["exp", "sub"]
 
 
 def _decode(token: str) -> dict:
     """验签并解码 JWT，失败抛 HTTPException"""
     settings = get_settings()
-    ***REMOVED*** 空密钥必须直接失败，不能"以空串为密钥继续验签" ——
-    ***REMOVED*** 那会让攻击者用空密钥自行签发任意 token。
+    # 空密钥必须直接失败，不能"以空串为密钥继续验签" ——
+    # 那会让攻击者用空密钥自行签发任意 token。
     if not settings.jwt_secret:
         logger.error("JWT_SECRET 未配置，拒绝所有请求")
         raise HTTPException(status_code=500, detail="服务端认证配置缺失")
@@ -40,7 +40,7 @@ def _decode(token: str) -> dict:
         return jwt.decode(
             token,
             settings.jwt_secret,
-            algorithms=["HS384"],  ***REMOVED*** 固定算法，避免算法混淆/降级
+            algorithms=["HS384"], # 固定算法，避免算法混淆/降级
             options={"verify_exp": True, "require": _REQUIRED_CLAIMS},
         )
     except jwt.ExpiredSignatureError:
@@ -78,7 +78,7 @@ async def get_current_user_role(
     roles = payload.get("roles") or []
     if isinstance(roles, str):
         roles = [roles]
-    ***REMOVED*** 多角色时优先返回管理/教师，避免角色顺序影响授权结果
+    # 多角色时优先返回管理/教师，避免角色顺序影响授权结果
     for preferred in ("ROLE_ADMIN", "ROLE_TEACHER"):
         if preferred in roles:
             return preferred

@@ -166,7 +166,7 @@ export const useLearningPathStore = create<LearningPathStore>((set, get) => {
               borderRadius: 6,
               border: 'none',
               background: 'var(--accent)',
-              color: '***REMOVED***fff',
+              color: '#fff',
               cursor: 'pointer',
             }}
           >

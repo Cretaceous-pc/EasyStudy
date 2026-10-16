@@ -28,16 +28,16 @@ class ProfileUpdateState(TypedDict):
     student_id: int
     course_id: int
 
-    ***REMOVED*** ── 触发来源 ──
-    trigger: str  ***REMOVED*** "conversation" | "behavior_threshold" | "manual" | "chapter_complete"
+    # ── 触发来源 ──
+    trigger: str  # "conversation" | "behavior_threshold" | "manual" | "chapter_complete"
     conversation_messages: Optional[List[dict]]
     behavior_events: Optional[List[dict]]
 
-    ***REMOVED*** ── 当前画像 ──
+    # ── 当前画像 ──
     current_profile: dict
     current_version: int
 
-    ***REMOVED*** ── 更新结果 ──
+    # ── 更新结果 ──
     extracted_dimensions: dict
     changes: dict
     needs_update: bool
@@ -45,7 +45,7 @@ class ProfileUpdateState(TypedDict):
     new_version: Optional[int]
 
 
-***REMOVED*** ── 节点函数 ──
+# ── 节点函数 ──
 
 async def extract_profile_from_context(state: ProfileUpdateState) -> dict:
     """LLM 从对话/行为中抽取画像维度"""
@@ -57,7 +57,7 @@ async def extract_profile_from_context(state: ProfileUpdateState) -> dict:
     )
 
     try:
-        ***REMOVED*** 构造上下文文本
+        # 构造上下文文本
         context_parts = []
         messages = state.get("conversation_messages") or []
         for msg in reversed(messages):
@@ -71,12 +71,12 @@ async def extract_profile_from_context(state: ProfileUpdateState) -> dict:
         context_text = "\n".join(context_parts) if context_parts else "（暂无对话/行为记录）"
         current_profile_text = json.dumps(state.get("current_profile", {}), ensure_ascii=False)
 
-        ***REMOVED*** 调用 LLM 抽取
+        # 调用 LLM 抽取
         prompt = PROMPT_PROFILE_EXTRACT.format(
             current_profile=current_profile_text,
             context=context_text,
         )
-        extracted = await deepseek_generate_json(prompt, temperature=0.1)  ***REMOVED*** P1-5: 画像抽取需低温度
+        extracted = await deepseek_generate_json(prompt, temperature=0.1)  # P1-5: 画像抽取需低温度
         logger.info(
             f"[extract_dimensions] EXIT student={student_id} "
             f"extracted_keys={list(extracted.keys())}"
@@ -105,7 +105,7 @@ async def compare_profiles(state: ProfileUpdateState) -> dict:
             current_profile=current_text,
             extracted_dimensions=extracted_text,
         )
-        result = await deepseek_generate_json(prompt, temperature=0.0)  ***REMOVED*** P1-5: 决策判断需确定性
+        result = await deepseek_generate_json(prompt, temperature=0.0)  # P1-5: 决策判断需确定性
 
         needs_update = result.get("needs_update", False)
         changes = result.get("changes", [])
@@ -129,18 +129,18 @@ async def apply_profile_update(state: ProfileUpdateState) -> dict:
     logger.info(f"[apply_update] applying profile update")
 
     try:
-        ***REMOVED*** 合并：用新值覆盖对应维度
+        # 合并：用新值覆盖对应维度
         updated_profile = dict(current)
         for dim, dim_data in extracted.items():
             if isinstance(dim_data, dict) and dim_data.get("confidence", 0) >= 0.5:
                 updated_profile[dim] = dim_data
-                ***REMOVED*** 追加更新时间戳
+                # 追加更新时间戳
                 from datetime import datetime, timezone
                 updated_profile[dim]["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         new_version = state.get("current_version", 0) + 1
 
-        ***REMOVED*** 写入 DB
+        # 写入 DB
         save_profile(student_id, course_id, updated_profile, new_version)
         save_profile_snapshot(
             student_id, course_id, updated_profile, new_version, state["trigger"]
@@ -166,13 +166,13 @@ def no_op(state: ProfileUpdateState) -> dict:
     return {"needs_update": False}
 
 
-***REMOVED*** ── 条件边 ──
+# ── 条件边 ──
 
 def after_compare(state: ProfileUpdateState) -> str:
     return "apply_update" if state.get("needs_update") else "no_op"
 
 
-***REMOVED*** ── 编译函数 ──
+# ── 编译函数 ──
 
 def compile_profile_graph():
     """编译 ProfileUpdateState 图"""

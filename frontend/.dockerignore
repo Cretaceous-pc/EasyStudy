@@ -1,27 +1,27 @@
-***REMOVED*** ── 凭证：绝不打进镜像 ──
+# ── 凭证：绝不打进镜像 ──
 .env
 .env.*
 !.env.example
 
-***REMOVED*** 依赖与构建产物（构建阶段用 npm ci 重新安装）
+# 依赖与构建产物（构建阶段用 npm ci 重新安装）
 node_modules/
 dist/
 build/
 
-***REMOVED*** 日志与临时文件
+# 日志与临时文件
 *.log
 logs/
 tmp/
 .git-tmp/
 
-***REMOVED*** 编辑器 / 系统
+# 编辑器 / 系统
 .idea/
 .vscode/
 *.swp
 .DS_Store
 Thumbs.db
 
-***REMOVED*** 版本控制与文档
+# 版本控制与文档
 .git/
 .gitignore
 README.md

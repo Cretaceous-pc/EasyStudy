@@ -25,7 +25,7 @@ const ABOUT_MD = `easyStudy 是一个 **AI 驱动的个性化学习平台**，�
 
 ---
 
-***REMOVED******REMOVED*** 技术架构
+# 技术架构
 
 | 层 | 技术栈 |
 |---|---|
@@ -37,21 +37,21 @@ const ABOUT_MD = `easyStudy 是一个 **AI 驱动的个性化学习平台**，�
 | 向量库 | Chroma |
 | 文件存储 | MinIO (S3) |
 
-***REMOVED******REMOVED*** 核心业务链路
+# 核心业务链路
 
-***REMOVED******REMOVED******REMOVED*** 1. 学习路径生成
+## 1. 学习路径生成
 用户填写偏好问卷 → LangGraph 5 节点流水线（load_context → generate_path → generate_teach_content → save_path → index_teach_to_kb）→ LLM 生成树状知识图谱 + 并行生成教学内容 → 切片存入 Chroma 向量库供 RAG 检索。
 
-***REMOVED******REMOVED******REMOVED*** 2. 课件 AI 伴读
+## 2. 课件 AI 伴读
 教师上传课件 → MinIO 存储 + 向量切片 → 学生打开课件时自动绑定 AI 对话 → 对话上下文基于课件向量检索（RAG），确保回答紧扣当前学习材料。
 
-***REMOVED******REMOVED******REMOVED*** 3. 资源生成
+## 3. 资源生成
 选择主题 + 资源类型（文档/思维导图/练习题/代码案例/拓展阅读）→ LangGraph 并行 fanout 5 个生成节点 → SSE 流式推送进度 → 自动入库 MinIO + 向量化。
 
-***REMOVED******REMOVED******REMOVED*** 4. 学生画像
+## 4. 学生画像
 对话/行为触发画像抽取 → LangGraph extract_dimensions → compare_and_decide → apply_update → 画像维度（知识基础、学习节奏、认知风格等）动态演化，驱动个性化推荐。
 
-***REMOVED******REMOVED*** 请求链路
+# 请求链路
 
 \`\`\`
 前端 axios → Vite proxy → Spring Boot (JWT 鉴权)
@@ -199,7 +199,7 @@ const AboutContent = memo(function AboutContent() {
           ),
           code: ({ children }) => (
             <code style={{
-              background: 'var(--parchment)', color: '***REMOVED***b55738',
+              background: 'var(--parchment)', color: 'b55738',
               padding: '1px 5px', borderRadius: 3,
               fontFamily: 'var(--font-mono)', fontSize: 12,
             }}>

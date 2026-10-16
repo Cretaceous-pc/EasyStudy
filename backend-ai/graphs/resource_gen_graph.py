@@ -14,35 +14,35 @@ logger = logging.getLogger(__name__)
 
 
 class ResourceGenState(TypedDict):
-    ***REMOVED*** ── 请求上下文 ──
+    # ── 请求上下文 ──
     student_id: int
     course_id: int
     topic: str
     resource_types: List[str]
-    requirements: str  ***REMOVED*** 用户自定义生成要求
+    requirements: str # 用户自定义生成要求
     profile: dict
 
-    ***REMOVED*** ── RAG 上下文 ──
+    # ── RAG 上下文 ──
     rag_context: str
 
-    ***REMOVED*** ── 规划 ──
+    # ── 规划 ──
     resource_plan: List[dict]
 
-    ***REMOVED*** ── 生成结果（并行节点各自写入，用 operator.or_ 合并） ──
+    # ── 生成结果（并行节点各自写入，用 operator.or_ 合并） ──
     generated: Annotated[dict, operator.or_]
     validation_results: dict
 
-    ***REMOVED*** ── 计数 ──
+    # ── 计数 ──
     generated_count: int
     failed_count: int
     resource_ids: List[int]
 
-    ***REMOVED*** ── 汇总 ──
+    # ── 汇总 ──
     summary_text: str
     error: Optional[str]
 
 
-***REMOVED*** ── 辅助函数 ──
+# ── 辅助函数 ──
 
 def _format_profile_for_prompt(profile: dict) -> dict:
     """从画像 JSONB 中提取各维度的 label"""
@@ -87,7 +87,7 @@ def _load_profile(student_id: int, course_id: int) -> dict:
         return {}
 
 
-***REMOVED*** ── 节点函数 ──
+# ── 节点函数 ──
 
 def plan_resource_list(state: ResourceGenState) -> dict:
     """决定生成哪些资源 + 加载上下文"""
@@ -96,10 +96,10 @@ def plan_resource_list(state: ResourceGenState) -> dict:
     course_id = state.get("course_id", 0)
     topic = state.get("topic", "")
 
-    ***REMOVED*** 加载 RAG 上下文
+    # 加载 RAG 上下文
     rag_context = _load_rag_context(student_id, course_id, topic)
 
-    ***REMOVED*** 加载画像（如果 state 中为空）
+    # 加载画像（如果 state 中为空）
     profile = state.get("profile", {})
     if not profile:
         profile = _load_profile(student_id, course_id)
@@ -321,7 +321,7 @@ async def assemble_response(state: ResourceGenState) -> dict:
             success += 1
             logger.info(f"[assemble] saved resource id={rid} type={resource_type}")
 
-            ***REMOVED*** 入库到 MinIO + course_materials + 向量库（最佳努力，不影响主流程）
+            # 入库到 MinIO + course_materials + 向量库（最佳努力，不影响主流程）
             try:
                 ingest_result = ingest_resource(
                     resource_id=rid,
@@ -351,12 +351,12 @@ async def assemble_response(state: ResourceGenState) -> dict:
     }
 
 
-***REMOVED*** ── 条件边: fanout ──
+# ── 条件边: fanout ──
 
-***REMOVED*** resource_type → 生成节点名的显式映射。
-***REMOVED*** 不能直接用 f"gen_{rt}" 推导：reading_material 对应的节点名是 gen_reading，
-***REMOVED*** 推导会得到不存在的 gen_reading_material，LangGraph 解析条件边时抛
-***REMOVED*** KeyError 导致整个资源生成失败（reading_material 是默认类型之一）。
+# resource_type → 生成节点名的显式映射。
+# 不能直接用 f"gen_{rt}" 推导：reading_material 对应的节点名是 gen_reading，
+# 推导会得到不存在的 gen_reading_material，LangGraph 解析条件边时抛
+# KeyError 导致整个资源生成失败（reading_material 是默认类型之一）。
 _RESOURCE_NODE = {
     "document": "gen_document",
     "mermaid": "gen_mermaid",
@@ -372,7 +372,7 @@ def fanout_to_generators(state: ResourceGenState) -> list:
     for rt in state.get("resource_types", []):
         node = _RESOURCE_NODE.get(rt)
         if node is None:
-            ***REMOVED*** 未知类型不应让整张图崩掉，跳过并记录
+            # 未知类型不应让整张图崩掉，跳过并记录
             logger.warning(f"[resource_gen] 未知资源类型，已跳过: {rt}")
             continue
         if node not in nodes:
@@ -380,13 +380,13 @@ def fanout_to_generators(state: ResourceGenState) -> list:
     return nodes if nodes else ["assemble"]
 
 
-***REMOVED*** ── 编译函数 ──
+# ── 编译函数 ──
 
 def compile_resource_gen_graph():
     """编译 ResourceGenState 图"""
     graph = StateGraph(ResourceGenState)
 
-    ***REMOVED*** 添加节点
+    # 添加节点
     graph.add_node("plan_resources", plan_resource_list)
     graph.add_node("gen_document", generate_document)
     graph.add_node("gen_mermaid", generate_mermaid)
@@ -396,10 +396,10 @@ def compile_resource_gen_graph():
     graph.add_node("validate", validate_all_resources)
     graph.add_node("assemble", assemble_response)
 
-    ***REMOVED*** 入口
+    # 入口
     graph.set_entry_point("plan_resources")
 
-    ***REMOVED*** fanout 条件分发
+    # fanout 条件分发
     graph.add_conditional_edges("plan_resources", fanout_to_generators, {
         "gen_document": "gen_document",
         "gen_mermaid": "gen_mermaid",
@@ -409,11 +409,11 @@ def compile_resource_gen_graph():
         "assemble": "assemble",
     })
 
-    ***REMOVED*** 所有生成节点 → validate
+    # 所有生成节点 → validate
     for node in ["gen_document", "gen_mermaid", "gen_exercise_set", "gen_code_case", "gen_reading"]:
         graph.add_edge(node, "validate")
 
-    ***REMOVED*** validate → assemble
+    # validate → assemble
     graph.add_edge("validate", "assemble")
     graph.add_edge("assemble", END)
 

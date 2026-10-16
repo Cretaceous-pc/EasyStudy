@@ -6,9 +6,9 @@ const mockResources: Resource[] = [
     resource_id: 1,
     resource_type: 'document',
     title: '线性回归知识点总结',
-    content: `***REMOVED******REMOVED*** 线性回归（Linear Regression）
+    content: ` 线性回归（Linear Regression）
 
-***REMOVED******REMOVED******REMOVED*** 1. 基本模型
+## 1. 基本模型
 $$y = Xw + b + \\epsilon$$
 
 其中：
@@ -16,13 +16,13 @@ $$y = Xw + b + \\epsilon$$
 - $w \\in \\mathbb{R}^{d}$ 为权重向量
 - $b$ 为偏置项
 
-***REMOVED******REMOVED******REMOVED*** 2. 损失函数（MSE）
+## 2. 损失函数（MSE）
 $$L(w,b) = \\frac{1}{n} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2$$
 
-***REMOVED******REMOVED******REMOVED*** 3. 解析解
+## 3. 解析解
 $$\\hat{w} = (X^T X)^{-1} X^T y$$
 
-***REMOVED******REMOVED******REMOVED*** 4. 梯度下降更新
+## 4. 梯度下降更新
 $$w_{t+1} = w_t - \\eta \\nabla_w L$$
 
 ---
@@ -58,7 +58,7 @@ $$w_{t+1} = w_t - \\eta \\nabla_w L$$
     resource_id: 3,
     resource_type: 'exercise_set',
     title: '逻辑回归练习题',
-    content: `***REMOVED******REMOVED******REMOVED*** 练习题 1：sigmoid 函数
+    content: ` 练习题 1：sigmoid 函数
 已知 sigmoid 函数 $\\sigma(z) = \\frac{1}{1 + e^{-z}}$，证明当 $z = 0$ 时，$\\sigma(0) = 0.5$。
 
 **答案**：
@@ -66,7 +66,7 @@ $$\\sigma(0) = \\frac{1}{1 + e^{0}} = \\frac{1}{2} = 0.5$$
 
 ---
 
-***REMOVED******REMOVED******REMOVED*** 练习题 2：交叉熵损失
+## 练习题 2：交叉熵损失
 二分类问题的交叉熵损失函数为：
 $$L = -[y \\log(\\hat{y}) + (1-y) \\log(1-\\hat{y})]$$
 
@@ -77,7 +77,7 @@ $$L = -[1 \\times \\log(0.9) + 0] \\approx 0.105$$
 
 ---
 
-***REMOVED******REMOVED******REMOVED*** 练习题 3：梯度计算
+## 练习题 3：梯度计算
 推导逻辑回归对权重 $w_j$ 的梯度：
 $$\\frac{\\partial L}{\\partial w_j} = \\frac{1}{n} \\sum_{i=1}^{n} (\\hat{y}_i - y_i) x_{ij}$$`,
     course_id: 1,
@@ -104,30 +104,30 @@ def linear_regression(X, y, lr=0.01, epochs=1000):
     """
     n_samples, n_features = X.shape
     
-    ***REMOVED*** 初始化权重和偏置
+    # 初始化权重和偏置
     w = np.zeros(n_features)
     b = 0
     
     for epoch in range(epochs):
-        ***REMOVED*** 前向传播
+        # 前向传播
         y_pred = np.dot(X, w) + b
         
-        ***REMOVED*** 计算梯度
+        # 计算梯度
         dw = (1 / n_samples) * np.dot(X.T, (y_pred - y))
         db = (1 / n_samples) * np.sum(y_pred - y)
         
-        ***REMOVED*** 更新参数
+        # 更新参数
         w -= lr * dw
         b -= lr * db
         
-        ***REMOVED*** 每 100 轮打印损失
+        # 每 100 轮打印损失
         if epoch % 100 == 0:
             loss = np.mean((y_pred - y) ** 2)
             print(f'Epoch {epoch}, Loss: {loss:.4f}')
     
     return w, b
 
-***REMOVED*** 使用示例
+# 使用示例
 X = np.random.randn(100, 3)
 true_w = np.array([2.0, -1.0, 0.5])
 y = np.dot(X, true_w) + 3.0 + np.random.randn(100) * 0.1
@@ -145,21 +145,21 @@ print(f'Learned b: {b:.4f}')
     resource_id: 5,
     resource_type: 'reading_material',
     title: '贝叶斯方法入门拓展阅读',
-    content: `***REMOVED******REMOVED*** 延伸阅读：贝叶斯视角下的机器学习
+    content: ` 延伸阅读：贝叶斯视角下的机器学习
 
-***REMOVED******REMOVED******REMOVED*** 推荐阅读
+## 推荐阅读
 1. **《Pattern Recognition and Machine Learning》** — Bishop
    - 第 1-3 章：概率论基础与贝叶斯决策理论
    
 2. **《Bayesian Methods for Hackers》** — Cam Davidson-Pilon
    - 面向实践的贝叶斯推断教程
 
-***REMOVED******REMOVED******REMOVED*** 核心概念
+## 核心概念
 - **先验分布** $P(\\theta)$：对参数的初始信念
 - **似然** $P(D|\\theta)$：数据在给定参数下的概率
 - **后验分布** $P(\\theta|D) \\propto P(D|\\theta)P(\\theta)$
 
-***REMOVED******REMOVED******REMOVED*** 与频率派对比
+## 与频率派对比
 | 维度 | 频率派 | 贝叶斯派 |
 |------|--------|----------|
 | 参数 | 固定未知常数 | 随机变量 |

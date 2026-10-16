@@ -189,7 +189,7 @@ export default function PathQuestionnaire({ open, onSubmit, isLoading, onClose, 
           className="flex items-center justify-center w-12 h-12 rounded-full mb-4"
           style={{
             background: current === 4 ? 'var(--accent)' : 'var(--accent-light)',
-            color: current === 4 ? '***REMOVED***fff' : 'var(--accent)',
+            color: current === 4 ? '#fff' : 'var(--accent)',
             fontSize: 20,
           }}
         >

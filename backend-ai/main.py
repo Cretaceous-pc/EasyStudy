@@ -18,20 +18,20 @@ app = FastAPI(
 
 settings = get_settings()
 
-***REMOVED*** ── 全局异常 → SSE error 中间件 ──
+# ── 全局异常 → SSE error 中间件 ──
 app.add_middleware(ExceptionToSSEMiddleware)
 
-***REMOVED*** ── CORS：仅允许 Spring Boot 来源 ──
+# ── CORS：仅允许 Spring Boot 来源 ──
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.cors_allowed_origins],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Accel-Buffering"],  ***REMOVED*** 禁用 Nginx 缓冲，SSE 必须
+    expose_headers=["X-Accel-Buffering"],  # 禁用 Nginx 缓冲，SSE 必须
 )
 
-***REMOVED*** ── 注册路由 ──
+# ── 注册路由 ──
 app.include_router(health.router, prefix="/internal", tags=["health"])
 app.include_router(chat.router, prefix="/internal", tags=["chat"])
 app.include_router(resources.router, prefix="/internal", tags=["resources"])

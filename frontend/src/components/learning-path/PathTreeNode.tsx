@@ -15,10 +15,10 @@ import type { PathNodeData, PathNodeStatus, PathItemType } from '../../types/lea
 
 // ── 状态样式配置 ──
 const STATUS_STYLE: Record<PathNodeStatus, { ring: string; icon: React.ReactNode }> = {
-  completed:     { ring: '***REMOVED***5b8c5a', icon: <CheckCircleOutlined style={{ fontSize: 14 }} /> },
-  in_progress:   { ring: '***REMOVED***c96442', icon: <PlayCircleOutlined style={{ fontSize: 14 }} /> },
-  pending:       { ring: '***REMOVED***b0aea5', icon: <ClockCircleOutlined style={{ fontSize: 14 }} /> },
-  skipped:       { ring: '***REMOVED***87867f', icon: <MinusCircleOutlined style={{ fontSize: 14 }} /> },
+  completed:     { ring: '#5b8c5a', icon: <CheckCircleOutlined style={{ fontSize: 14 }} /> },
+  in_progress:   { ring: '#c96442', icon: <PlayCircleOutlined style={{ fontSize: 14 }} /> },
+  pending:       { ring: '#b0aea5', icon: <ClockCircleOutlined style={{ fontSize: 14 }} /> },
+  skipped:       { ring: '#87867f', icon: <MinusCircleOutlined style={{ fontSize: 14 }} /> },
 };
 
 // ── 类型图标 ──

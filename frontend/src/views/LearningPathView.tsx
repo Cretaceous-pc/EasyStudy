@@ -164,7 +164,7 @@ export default function LearningPathView() {
             className="px-5 py-2 rounded-lg border-none cursor-pointer font-medium"
             style={{
               background: 'var(--accent)',
-              color: '***REMOVED***fff',
+              color: '#fff',
               fontSize: 13,
               transition: 'all 0.2s',
               boxShadow: '0 1px 3px rgba(201,100,66,0.25)',
@@ -212,7 +212,7 @@ export default function LearningPathView() {
         title={
           <div className="flex items-center gap-2.5">
             <div className="flex items-center justify-center rounded-full flex-shrink-0"
-              style={{ width: 28, height: 28, background: '***REMOVED***fdf3e0', color: '***REMOVED***d4882a', fontSize: 14 }}>
+              style={{ width: 28, height: 28, background: '#fdf3e0', color: '#d4882a', fontSize: 14 }}>
               <ExclamationCircleOutlined />
             </div>
             <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 500, color: 'var(--near-black)' }}>

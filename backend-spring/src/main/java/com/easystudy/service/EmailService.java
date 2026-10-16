@@ -54,21 +54,21 @@ public class EmailService {
 
     private String buildEmailContent(String code) {
         return """
-                <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; padding: 32px; background: ***REMOVED***faf9f5; border: 1px solid ***REMOVED***f0eee6; border-radius: 12px;">
-                  <h1 style="font-size: 20px; color: ***REMOVED***141413; margin-bottom: 16px;">
-                    <span style="color: ***REMOVED***c96442;">easyStudy</span> 密码重置
+                <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #faf9f5; border: 1px solid #f0eee6; border-radius: 12px;">
+                  <h1 style="font-size: 20px; color: #141413; margin-bottom: 16px;">
+                    <span style="color: #c96442;">easyStudy</span> 密码重置
                   </h1>
-                  <p style="color: ***REMOVED***4d4c48; line-height: 1.6;">
+                  <p style="color: #4d4c48; line-height: 1.6;">
                     您正在重置密码，验证码如下：
                   </p>
-                  <div style="margin: 24px 0; padding: 16px 24px; background: ***REMOVED***f5f4ed; border-radius: 8px; text-align: center;">
-                    <span style="font-family: monospace; font-size: 28px; color: ***REMOVED***c96442; letter-spacing: 4px; font-weight: 600;">%s</span>
+                  <div style="margin: 24px 0; padding: 16px 24px; background: #f5f4ed; border-radius: 8px; text-align: center;">
+                    <span style="font-family: monospace; font-size: 28px; color: #c96442; letter-spacing: 4px; font-weight: 600;">%s</span>
                   </div>
-                  <p style="color: ***REMOVED***87867f; font-size: 13px; line-height: 1.5;">
+                  <p style="color: #87867f; font-size: 13px; line-height: 1.5;">
                     验证码 5 分钟内有效。如果这不是您本人的操作，请忽略此邮件。
                   </p>
-                  <hr style="border: none; border-top: 1px solid ***REMOVED***f0eee6; margin: 24px 0 12px;" />
-                  <p style="color: ***REMOVED***b0aea5; font-size: 12px;">
+                  <hr style="border: none; border-top: 1px solid #f0eee6; margin: 24px 0 12px;" />
+                  <p style="color: #b0aea5; font-size: 12px;">
                     此邮件由系统自动发送，请勿回复。
                   </p>
                 </div>

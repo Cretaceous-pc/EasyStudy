@@ -33,32 +33,32 @@ const typeConfig: Record<
   document: {
     icon: FileTextOutlined,
     label: '知识点总结',
-    color: '***REMOVED***c96442',
-    bg: '***REMOVED***e8d4c8',
+    color: 'c96442',
+    bg: 'e8d4c8',
   },
   mermaid: {
     icon: PartitionOutlined,
     label: '思维导图',
-    color: '***REMOVED***5b8c5a',
-    bg: '***REMOVED***d4e4d4',
+    color: '5b8c5a',
+    bg: 'd4e4d4',
   },
   exercise_set: {
     icon: EditOutlined,
     label: '练习题',
-    color: '***REMOVED***d4a017',
-    bg: '***REMOVED***f0e6c8',
+    color: 'd4a017',
+    bg: 'f0e6c8',
   },
   code_case: {
     icon: CodeOutlined,
     label: '代码案例',
-    color: '***REMOVED***4a7c9b',
-    bg: '***REMOVED***d0e0ec',
+    color: '4a7c9b',
+    bg: 'd0e0ec',
   },
   reading_material: {
     icon: ReadOutlined,
     label: '拓展阅读',
-    color: '***REMOVED***8b6f8b',
-    bg: '***REMOVED***e4d8e4',
+    color: '8b6f8b',
+    bg: 'e4d8e4',
   },
 };
 
@@ -281,8 +281,8 @@ export default function ResourceCard({ resource }: Props) {
               }}
               title="删除资源"
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '***REMOVED***fce4e4';
-                e.currentTarget.style.color = '***REMOVED***b55738';
+                e.currentTarget.style.background = 'fce4e4';
+                e.currentTarget.style.color = 'b55738';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'var(--parchment)';
@@ -319,7 +319,7 @@ export default function ResourceCard({ resource }: Props) {
             overflow: 'hidden',
           }}
         >
-          {extractText(resource.content).slice(0, 120).replace(/[***REMOVED****`\n]/g, ' ')}...
+          {extractText(resource.content).slice(0, 120).replace(/[*`\n]/g, ' ')}...
         </div>
       )}
 
@@ -404,7 +404,7 @@ export default function ResourceCard({ resource }: Props) {
                     <pre
                       style={{
                         background: 'var(--near-black)',
-                        color: '***REMOVED***e8e6dc',
+                        color: 'e8e6dc',
                         padding: 12,
                         borderRadius: 8,
                         overflowX: 'auto',
@@ -487,7 +487,7 @@ export default function ResourceCard({ resource }: Props) {
                 取消
               </Button>
               <Button block onClick={handleDelete} disabled={deleting} loading={deleting}
-                style={{ fontSize: 13, background: '***REMOVED***b55738', borderColor: '***REMOVED***b55738', color: '***REMOVED***fff' }}>
+                style={{ fontSize: 13, background: 'b55738', borderColor: 'b55738', color: 'fff' }}>
                 {deleting ? '删除中...' : '确认删除'}
               </Button>
             </div>
@@ -495,7 +495,7 @@ export default function ResourceCard({ resource }: Props) {
           styles={{ body: { padding: '8px 24px 0' } }}
         >
           <div className="flex flex-col items-center">
-            <ExclamationCircleOutlined style={{ fontSize: 36, color: '***REMOVED***b55738', marginBottom: 12 }} />
+            <ExclamationCircleOutlined style={{ fontSize: 36, color: 'b55738', marginBottom: 12 }} />
             <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--near-black)', marginBottom: 4, fontFamily: 'var(--font-serif)' }}>
               确认删除
             </div>

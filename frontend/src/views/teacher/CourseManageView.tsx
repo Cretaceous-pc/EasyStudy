@@ -12,9 +12,9 @@ import AppModal from '../../components/shared/AppModal';
 import type { Course } from '../../types/course';
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-  published: { label: '已发布', color: '***REMOVED***2e7d32', bg: '***REMOVED***e8f5e9' },
-  draft: { label: '草稿', color: '***REMOVED***ed6c02', bg: '***REMOVED***fff3e0' },
-  archived: { label: '已归档', color: '***REMOVED***757575', bg: '***REMOVED***f5f5f5' },
+  published: { label: '已发布', color: '#2e7d32', bg: '#e8f5e9' },
+  draft: { label: '草稿', color: '#ed6c02', bg: '#fff3e0' },
+  archived: { label: '已归档', color: '#757575', bg: '#f5f5f5' },
 };
 
 export default function CourseManageView() {

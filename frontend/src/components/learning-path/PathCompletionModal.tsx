@@ -27,7 +27,7 @@ export default function PathCompletionModal({ visible, onLater, onRegenerate }: 
             width: 72,
             height: 72,
             background: 'rgba(91,140,90,0.12)',
-            color: '***REMOVED***5b8c5a',
+            color: '#5b8c5a',
             fontSize: 36,
           }}
         >

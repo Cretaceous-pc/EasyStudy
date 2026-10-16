@@ -42,13 +42,13 @@ export const mockMaterialTree: MockTreeNode[] = [
 ];
 
 export const mockMaterialContent: Record<string, string> = {
-  'file-1-1': `***REMOVED*** 1.1 什么是监督学习
+  'file-1-1': `# 1.1 什么是监督学习
 
 监督学习（**Supervised Learning**）是机器学习中最核心、应用最广泛的范式。其基本思想是：利用一组**已知标签（Label）**的训练样本，让模型学习从输入到输出的映射关系，从而对未见过的数据进行预测。
 
 简单类比：就像学生做练习题——每道题都有**标准答案**（标签）。学生通过反复练习，掌握了"题目→答案"的规律后，遇到新题也能作答。监督学习正是这个过程的数学抽象。
 
-***REMOVED******REMOVED*** 核心数学表示
+## 核心数学表示
 
 \`\`\`
 D = {(x₁, y₁), (x₂, y₂), ..., (xₙ, yₙ)}
@@ -58,13 +58,13 @@ yᵢ — 第 i 个样本的标签（Ground Truth）
 
 目标：学习映射函数 f(x) ≈ y，使得在未见过的测试数据上也能准确预测。
 
-***REMOVED******REMOVED*** 回归与分类
+## 回归与分类
 
 监督学习按输出类型分为两大类别：
 - **回归（Regression）**：预测连续值（如房价：350 万元）
 - **分类（Classification）**：预测离散标签（如垃圾邮件：是/否）
 
-***REMOVED******REMOVED*** 常见算法
+## 常见算法
 
 - 线性回归 / 逻辑回归
 - 决策树 / 随机森林
@@ -72,23 +72,23 @@ yᵢ — 第 i 个样本的标签（Ground Truth）
 - KNN（K 近邻）
 - 神经网络
 `,
-  'file-1-2': `***REMOVED*** 1.2 线性回归基础理论
+  'file-1-2': `# 1.2 线性回归基础理论
 
 线性回归是监督学习中最基础、最直观的模型。它假设目标变量 y 与特征 x 之间存在线性关系。
 
-***REMOVED******REMOVED*** 模型形式
+## 模型形式
 
 $$y = w^T x + b = \\sum_{j=1}^{d} w_j x_j + b$$
 
 其中 w 是权重向量，b 是偏置项。
 
-***REMOVED******REMOVED*** 损失函数
+## 损失函数
 
 采用均方误差（MSE）：
 
 $$L(w, b) = \\frac{1}{n} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2$$
 
-***REMOVED******REMOVED*** 优化方法
+## 优化方法
 
 - **解析解**：正规方程（Normal Equation）
 - **迭代解**：梯度下降（Gradient Descent）

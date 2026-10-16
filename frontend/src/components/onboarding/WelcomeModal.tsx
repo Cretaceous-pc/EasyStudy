@@ -380,7 +380,7 @@ function NavButton({
             ? 'var(--stone-gray)'
             : 'var(--accent)'
           : 'var(--parchment)',
-        color: primary ? '***REMOVED***fff' : 'var(--olive-gray)',
+        color: primary ? '#fff' : 'var(--olive-gray)',
         fontFamily: 'var(--font-sans)',
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',

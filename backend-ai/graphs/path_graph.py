@@ -26,21 +26,21 @@ class PathGenState(TypedDict):
     profile: dict
     profile_version: int
     force_regenerate: bool
-    questionnaire: dict  ***REMOVED*** 前端问卷答案
+    questionnaire: dict  # 前端问卷答案
 
-    ***REMOVED*** ── 课程结构 ──
+    # ── 课程结构 ──
     course_chapters: List[dict]
     available_resources: List[dict]
     completed_items: List[dict]
 
-    ***REMOVED*** ── 生成的路径 ──
+    # ── 生成的路径 ──
     path_items: List[dict]
     path_id: Optional[int]
-    abandoned_path_ids: List[int]  ***REMOVED*** 被废弃的旧路径 ID，用于清理 Chroma
+    abandoned_path_ids: List[int]  # 被废弃的旧路径 ID，用于清理 Chroma
     error: Optional[str]
 
 
-***REMOVED*** ── 节点函数 ──
+# ── 节点函数 ──
 
 async def load_course_and_resources(state: PathGenState) -> dict:
     """加载学生画像（仅作辅助参考，不加载课程章节/资源/已完成项）"""
@@ -49,7 +49,7 @@ async def load_course_and_resources(state: PathGenState) -> dict:
     logger.info(f"[load_context] START student={student_id} course={course_id}")
 
     try:
-        ***REMOVED*** 仅加载画像作为辅助参考，路径生成完全基于问卷
+        # 仅加载画像作为辅助参考，路径生成完全基于问卷
         profile_data = load_profile(student_id, course_id)
 
         logger.info(f"[load_context] profile_version={profile_data['version']}")
@@ -81,7 +81,7 @@ async def generate_learning_path(state: PathGenState) -> dict:
         profile = state.get("profile", {})
         questionnaire = state.get("questionnaire", {})
 
-        ***REMOVED*** 问卷中文标签映射
+        # 问卷中文标签映射
         q_purpose_labels = {
             "exam": "通过考试/考证", "career": "提升工作技能",
             "interest": "兴趣探索", "research": "学术研究", "other": "其他",
@@ -146,7 +146,7 @@ async def save_learning_path_node(state: PathGenState) -> dict:
         return {"error": f"保存学习路径失败: {str(e)[:200]}"}
 
 
-***REMOVED*** ── 教学内容生成 ──
+# ── 教学内容生成 ──
 
 async def generate_teach_content(state: PathGenState) -> dict:
     """为每个路径节点并发生成教学内容"""
@@ -156,7 +156,7 @@ async def generate_teach_content(state: PathGenState) -> dict:
 
     logger.info(f"[generate_teach] generating teach content for {len(items)} items")
 
-    ***REMOVED*** 路径上下文（节点标题链）
+    # 路径上下文（节点标题链）
     path_context = " → ".join([it.get("title", "") for it in items])
 
     from prompts.path_prompts import PROMPT_NODE_TEACH
@@ -177,7 +177,7 @@ async def generate_teach_content(state: PathGenState) -> dict:
             logger.info(f"[generate_teach] item seq={item['seq_order']} done ({len(content)} chars)")
         except Exception as e:
             logger.error(f"[generate_teach] item seq={item['seq_order']} FAILED: {e}")
-            item["teach_content"] = ""  ***REMOVED*** 失败不影响其他节点
+            item["teach_content"] = ""  # 失败不影响其他节点
         return item
 
     enriched = await asyncio.gather(*[gen_one(it) for it in items])
@@ -185,7 +185,7 @@ async def generate_teach_content(state: PathGenState) -> dict:
     return {"path_items": enriched}
 
 
-***REMOVED*** ── 知识库索引 ──
+# ── 知识库索引 ──
 
 async def index_teach_to_kb(state: PathGenState) -> dict:
     """将教学内容切片后索引到 Chroma + knowledge_chunks 表，同时清理旧路径的向量"""
@@ -204,7 +204,7 @@ async def index_teach_to_kb(state: PathGenState) -> dict:
 
         vs = get_vectorstore("easystudy_chunks")
 
-        ***REMOVED*** 清理被废弃路径的 Chroma 向量
+        # 清理被废弃路径的 Chroma 向量
         for old_pid in abandoned_ids:
             try:
                 vs.delete_by_path_id(old_pid)
@@ -220,7 +220,7 @@ async def index_teach_to_kb(state: PathGenState) -> dict:
             if not teach:
                 continue
 
-            ***REMOVED*** 按段落切片，过滤太短的
+            # 按段落切片，过滤太短的
             paragraphs = [p.strip() for p in teach.split("\n\n") if len(p.strip()) > 50]
             if not paragraphs:
                 paragraphs = [teach[:500]]
@@ -243,18 +243,18 @@ async def index_teach_to_kb(state: PathGenState) -> dict:
             ids, docs, metas = zip(*chunks_batch)
             vs.add_documents(ids=list(ids), documents=list(docs), metadatas=list(metas))
 
-            ***REMOVED*** 同步写入 knowledge_chunks 表
+            # 同步写入 knowledge_chunks 表
             save_teach_chunks(path_id, course_id, items_with_chunks)
 
         logger.info(f"[index_teach] indexed {len(chunks_batch)} chunks total")
     except Exception as e:
         logger.error(f"[index_teach] FAILED: {e}", exc_info=True)
-        ***REMOVED*** 索引失败不阻塞路径生成
+        # 索引失败不阻塞路径生成
 
     return {"error": state.get("error")}
 
 
-***REMOVED*** ── 编译函数 ──
+# ── 编译函数 ──
 
 def compile_path_graph():
     """编译 PathGenState 图"""

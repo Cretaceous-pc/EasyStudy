@@ -157,7 +157,7 @@ export default function LoginLayout() {
                 className="mb-3 py-2 px-3 rounded-lg text-xs"
                 style={{
                   background: 'rgba(100,160,100,0.08)',
-                  color: '***REMOVED***4a8c4a',
+                  color: '#4a8c4a',
                   border: '1px solid rgba(100,160,100,0.15)',
                 }}
               >
@@ -174,7 +174,7 @@ export default function LoginLayout() {
                   className="flex-1 py-2 text-sm font-medium border-none cursor-pointer transition-all"
                   style={{
                     background: mode === 'login' ? 'var(--accent)' : 'transparent',
-                    color: mode === 'login' ? '***REMOVED***fff' : 'var(--olive-gray)',
+                    color: mode === 'login' ? '#fff' : 'var(--olive-gray)',
                     borderRadius: 6,
                   }}
                 >
@@ -186,7 +186,7 @@ export default function LoginLayout() {
                   className="flex-1 py-2 text-sm font-medium border-none cursor-pointer transition-all"
                   style={{
                     background: mode === 'register' ? 'var(--accent)' : 'transparent',
-                    color: mode === 'register' ? '***REMOVED***fff' : 'var(--olive-gray)',
+                    color: mode === 'register' ? '#fff' : 'var(--olive-gray)',
                     borderRadius: 6,
                   }}
                 >
@@ -477,7 +477,7 @@ export default function LoginLayout() {
               className="w-full py-2.5 rounded-lg font-medium text-sm cursor-pointer border-none"
               style={{
                 background: loading ? 'var(--stone-gray)' : 'var(--accent)',
-                color: '***REMOVED***fff',
+                color: '#fff',
                 fontFamily: 'var(--font-sans)',
                 transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 boxShadow: '0 1px 3px rgba(201,100,66,0.25)',

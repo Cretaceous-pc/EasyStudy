@@ -8,12 +8,12 @@ mermaid.initialize({
   themeVariables: {
     fontFamily: 'var(--font-sans), system-ui, sans-serif',
     fontSize: '13px',
-    primaryColor: '***REMOVED***faf6f0',
-    primaryBorderColor: '***REMOVED***e8e2d6',
-    primaryTextColor: '***REMOVED***3d3633',
-    lineColor: '***REMOVED***b5a898',
-    secondaryColor: '***REMOVED***f5f0e8',
-    tertiaryColor: '***REMOVED***faf8f5',
+    primaryColor: '#faf6f0',
+    primaryBorderColor: '#e8e2d6',
+    primaryTextColor: '#3d3633',
+    lineColor: '#b5a898',
+    secondaryColor: '#f5f0e8',
+    tertiaryColor: '#faf8f5',
   },
   flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
   sequence: { useMaxWidth: true },
@@ -63,7 +63,7 @@ export default function MermaidDiagram({ chart }: MermaidDiagramProps) {
         color: 'var(--stone-gray)',
         fontFamily: 'var(--font-sans)',
       }}>
-        <div style={{ marginBottom: 8, color: '***REMOVED***b55738', fontWeight: 500 }}>
+        <div style={{ marginBottom: 8, color: '#b55738', fontWeight: 500 }}>
           ⚠ 图表渲染失败
         </div>
         <pre style={{

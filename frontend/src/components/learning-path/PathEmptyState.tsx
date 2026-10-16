@@ -17,11 +17,11 @@ export default function PathEmptyState({ isLoading, error, onGenerate, onRetry }
         className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
         style={{
           background: 'var(--ivory)',
-          border: `1px solid ${error ? '***REMOVED***b55738' : 'var(--border-cream)'}`,
+          border: `1px solid ${error ? '#b55738' : 'var(--border-cream)'}`,
         }}
       >
         {error ? (
-          <CloseCircleOutlined style={{ fontSize: 24, color: '***REMOVED***b55738' }} />
+          <CloseCircleOutlined style={{ fontSize: 24, color: '#b55738' }} />
         ) : isLoading ? (
           <LoadingOutlined style={{ fontSize: 24, color: 'var(--accent)' }} spin />
         ) : (
@@ -42,7 +42,7 @@ export default function PathEmptyState({ isLoading, error, onGenerate, onRetry }
       <p
         style={{
           fontSize: 13,
-          color: error ? '***REMOVED***b55738' : 'var(--stone-gray)',
+          color: error ? '#b55738' : 'var(--stone-gray)',
           marginBottom: 16,
           maxWidth: 320,
           textAlign: 'center',
@@ -75,7 +75,7 @@ export default function PathEmptyState({ isLoading, error, onGenerate, onRetry }
             className="px-5 py-2 rounded-lg border-none cursor-pointer font-medium"
             style={{
               background: 'var(--accent)',
-              color: '***REMOVED***fff',
+              color: '#fff',
               fontSize: 13,
               transition: 'all 0.2s',
               boxShadow: '0 1px 3px rgba(201,100,66,0.25)',
@@ -91,7 +91,7 @@ export default function PathEmptyState({ isLoading, error, onGenerate, onRetry }
           className="px-5 py-2 rounded-lg border-none cursor-pointer font-medium"
           style={{
             background: 'var(--accent)',
-            color: '***REMOVED***fff',
+            color: '#fff',
             fontSize: 13,
             transition: 'all 0.2s',
             boxShadow: '0 1px 3px rgba(201,100,66,0.25)',

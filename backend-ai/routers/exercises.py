@@ -30,16 +30,16 @@ router = APIRouter(prefix="/exercises", tags=["exercises"])
 profile_app = compile_profile_graph()
 
 
-***REMOVED*** ── 请求/响应模型 ──
+# ── 请求/响应模型 ──
 
 class ExerciseSubmitRequest(BaseModel):
     resource_id: int
     exercise_index: int
-    answer: dict  ***REMOVED*** {"type": "single_choice", "selected": 1} 或 {"type": "coding", "code": "..."}
+    answer: dict # {"type": "single_choice", "selected": 1} 或 {"type": "coding", "code": "..."}
     time_spent_sec: int = 0
 
 
-***REMOVED*** ── 端点 ──
+# ── 端点 ──
 
 @router.post("/submit")
 async def submit_answer(
@@ -48,15 +48,15 @@ async def submit_answer(
 ):
     """提交答案 → 判断正误 → 返回解析"""
 
-    ***REMOVED*** 1. 从 resources 表加载题目正确答案
+    # 1. 从 resources 表加载题目正确答案
     try:
         from services.db import get_connection
 
         with get_connection() as conn:
             with conn.cursor() as cur:
-                ***REMOVED*** 必须按 student_id 过滤：原实现只按 id 查，任何人遍历
-                ***REMOVED*** resource_id 就能读取他人资源的题目内容与正确答案。
-                ***REMOVED*** 对比 db.py 的 get_resource_by_id(resource_id, student_id) 是正确写法。
+                # 必须按 student_id 过滤：原实现只按 id 查，任何人遍历
+                # resource_id 就能读取他人资源的题目内容与正确答案。
+                # 对比 db.py 的 get_resource_by_id(resource_id, student_id) 是正确写法。
                 cur.execute(
                     "SELECT content, course_id FROM resources WHERE id = %s AND student_id = %s",
                     (req.resource_id, user_id),
@@ -74,7 +74,7 @@ async def submit_answer(
         logger.error(f"Failed to load exercise resource: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="加载练习题失败")
 
-    ***REMOVED*** 2. 定位题目并判断正误
+    # 2. 定位题目并判断正误
     exercises = content.get("exercises", [])
     if req.exercise_index < 0 or req.exercise_index >= len(exercises):
         raise HTTPException(
@@ -87,27 +87,27 @@ async def submit_answer(
     explanation = exercise.get("explanation", "")
     student_answer = req.answer
 
-    ***REMOVED*** 判断正误
+    # 判断正误
     is_correct = None
     if correct_answer is not None:
         if exercise.get("type") == "coding":
-            ***REMOVED*** 编程题：暂不自动判断，交给校验智能体
+            # 编程题：暂不自动判断，交给校验智能体
             is_correct = None
             explanation = "编程题已提交，将由 AI 助教批改。"
         else:
-            ***REMOVED*** 选择题和填空题：比较答案
+            # 选择题和填空题：比较答案
             student_value = student_answer.get("selected") or student_answer.get("value")
             if isinstance(correct_answer, list):
-                ***REMOVED*** 多选题：比较集合
-                ***REMOVED*** 注意: 客户端可能把单选值写成标量（{"selected": 1}），
-                ***REMOVED*** 原实现直接 set(1) 会抛 TypeError: 'int' object is not iterable → 500。
+                # 多选题：比较集合
+                # 注意: 客户端可能把单选值写成标量（{"selected": 1}），
+                # 原实现直接 set(1) 会抛 TypeError: 'int' object is not iterable → 500。
                 raw_selected = student_answer.get("selected", [])
                 selected = raw_selected if isinstance(raw_selected, (list, tuple, set)) else [raw_selected]
                 is_correct = set(selected) == set(correct_answer)
             else:
                 is_correct = student_value == correct_answer
 
-    ***REMOVED*** 3. 保存答题记录
+    # 3. 保存答题记录
     attempt_id = save_exercise_attempt(
         student_id=user_id,
         resource_id=req.resource_id,
@@ -117,7 +117,7 @@ async def submit_answer(
         time_spent_sec=req.time_spent_sec,
     )
 
-    ***REMOVED*** 4. 错题 ≥3 次 → 触发画像更新
+    # 4. 错题 ≥3 次 → 触发画像更新
     wrong_count = get_exercise_wrong_count(user_id, req.resource_id, req.exercise_index)
     if wrong_count >= 3:
         logger.info(
@@ -151,8 +151,8 @@ async def submit_answer(
             }
 
             import asyncio
-            ***REMOVED*** P0-2+P1-3 修复: 使用 asyncio.create_task 在后台执行图像更新
-            ***REMOVED*** 而非 ThreadPoolExecutor.submit(async_fn)
+            # P0-2+P1-3 修复: 使用 asyncio.create_task 在后台执行图像更新
+            # 而非 ThreadPoolExecutor.submit(async_fn)
             asyncio.create_task(_trigger_profile_update(profile_state))
         except Exception as e:
             logger.error(f"[exercise] profile update trigger failed: {e}", exc_info=True)

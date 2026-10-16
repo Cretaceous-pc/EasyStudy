@@ -13,7 +13,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      ***REMOVED*** 空口令时 Spring Data Redis 不会发送 AUTH；compose 部署下由 REDIS_PASSWORD 注入
+      # 空口令时 Spring Data Redis 不会发送 AUTH；compose 部署下由 REDIS_PASSWORD 注入
       password: ${REDIS_PASSWORD:}
 
 jwt:

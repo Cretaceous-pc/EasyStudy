@@ -183,8 +183,8 @@ export default function ResourceGenModal({ open, onClose, contextContent }: Prop
         }}
       >
         {toastType === 'success'
-          ? <CheckCircleOutlined style={{ fontSize: 20, color: '***REMOVED***52c41a', flexShrink: 0 }} />
-          : <CloseCircleOutlined style={{ fontSize: 20, color: '***REMOVED***b55738', flexShrink: 0 }} />
+          ? <CheckCircleOutlined style={{ fontSize: 20, color: '52c41a', flexShrink: 0 }} />
+          : <CloseCircleOutlined style={{ fontSize: 20, color: 'b55738', flexShrink: 0 }} />
         }
         <div>
           <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--near-black)', fontFamily: 'var(--font-serif)' }}>
@@ -252,7 +252,7 @@ export default function ResourceGenModal({ open, onClose, contextContent }: Prop
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg border-none cursor-pointer"
                   style={{
                     background: sel ? 'var(--accent)' : 'var(--parchment)',
-                    color: sel ? '***REMOVED***fff' : 'var(--olive-gray)',
+                    color: sel ? 'fff' : 'var(--olive-gray)',
                     fontSize: 12, transition: 'all 0.2s',
                   }}
                 >
@@ -298,7 +298,7 @@ export default function ResourceGenModal({ open, onClose, contextContent }: Prop
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border-none font-medium"
             style={{
               background: canGenerate ? 'var(--accent)' : 'var(--warm-sand)',
-              color: canGenerate ? '***REMOVED***fff' : 'var(--stone-gray)',
+              color: canGenerate ? 'fff' : 'var(--stone-gray)',
               fontSize: 13, transition: 'all 0.2s',
               cursor: canGenerate ? 'pointer' : 'not-allowed',
             }}
@@ -385,7 +385,7 @@ export default function ResourceGenModal({ open, onClose, contextContent }: Prop
           styles={{ body: { padding: '16px 24px 8px' } }}
         >
           <div className="flex flex-col items-center">
-            <CloseCircleOutlined style={{ fontSize: 40, color: '***REMOVED***b55738', marginBottom: 12 }} />
+            <CloseCircleOutlined style={{ fontSize: 40, color: 'b55738', marginBottom: 12 }} />
             <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--near-black)', marginBottom: 4, fontFamily: 'var(--font-serif)' }}>
               生成失败
             </div>
@@ -446,7 +446,7 @@ export default function ResourceGenModal({ open, onClose, contextContent }: Prop
         styles={{ body: { padding: '16px 24px 8px' } }}
       >
         <div className="flex flex-col items-center">
-          <CheckCircleOutlined style={{ fontSize: 40, color: '***REMOVED***52c41a', marginBottom: 12 }} />
+          <CheckCircleOutlined style={{ fontSize: 40, color: '52c41a', marginBottom: 12 }} />
           <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--near-black)', marginBottom: 4, fontFamily: 'var(--font-serif)' }}>
             生成完成！
           </div>

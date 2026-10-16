@@ -25,15 +25,15 @@ router = APIRouter(prefix="/tts", tags=["tts"])
 
 settings = get_settings()
 
-***REMOVED*** Redis 缓存键前缀
+# Redis 缓存键前缀
 TTS_CACHE_PREFIX = "tts:"
-TTS_CACHE_TTL = 86400  ***REMOVED*** 24 小时
+TTS_CACHE_TTL = 86400 # 24 小时
 
-***REMOVED*** 分段参数
-MAX_SEGMENT_LENGTH = 500  ***REMOVED*** 字
+# 分段参数
+MAX_SEGMENT_LENGTH = 500 # 字
 
 
-***REMOVED*** ── 请求/响应模型 ──
+# ── 请求/响应模型 ──
 
 class TTSSynthesizeRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=5000, description="待合成文本，限制 5000 字符")
@@ -41,7 +41,7 @@ class TTSSynthesizeRequest(BaseModel):
     voice: str = "xiaoyan"
 
 
-***REMOVED*** ── Redis 辅助 ──
+# ── Redis 辅助 ──
 
 _redis_client = None
 
@@ -66,7 +66,7 @@ def _text_md5(text: str) -> str:
     return hashlib.md5(text.encode("utf-8")).hexdigest()
 
 
-***REMOVED*** ── 分段 ──
+# ── 分段 ──
 
 def _split_text(text: str, max_len: int = MAX_SEGMENT_LENGTH) -> list:
     """将长文本按段落边界切分，每段不超过 max_len 字"""
@@ -82,7 +82,7 @@ def _split_text(text: str, max_len: int = MAX_SEGMENT_LENGTH) -> list:
         else:
             if current:
                 segments.append(current)
-            ***REMOVED*** 如果段落本身超长，按句号再切
+            # 如果段落本身超长，按句号再切
             if len(para) > max_len:
                 sentences = para.replace("。", "。\n").split("\n")
                 for s in sentences:
@@ -92,7 +92,7 @@ def _split_text(text: str, max_len: int = MAX_SEGMENT_LENGTH) -> list:
                     if len(s) <= max_len:
                         segments.append(s)
                     else:
-                        ***REMOVED*** 硬切
+                        # 硬切
                         for i in range(0, len(s), max_len):
                             segments.append(s[i:i + max_len])
             else:
@@ -102,7 +102,7 @@ def _split_text(text: str, max_len: int = MAX_SEGMENT_LENGTH) -> list:
     return segments
 
 
-***REMOVED*** ── 端点 ──
+# ── 端点 ──
 
 @router.post("/synthesize")
 async def synthesize(
@@ -115,15 +115,15 @@ async def synthesize(
     if not text:
         raise HTTPException(status_code=400, detail="文本不能为空")
 
-    ***REMOVED*** 移除 Markdown 标记，保留纯文本
+    # 移除 Markdown 标记，保留纯文本
     import re
-    clean_text = re.sub(r'[***REMOVED****>`\-\[\]()|]', '', text)
+    clean_text = re.sub(r'[*>`\-\[\]()|]', '', text)
     clean_text = re.sub(r'\n{2,}', '\n', clean_text).strip()
 
     text_hash = _text_md5(clean_text)
     cache_key = f"{TTS_CACHE_PREFIX}{text_hash}"
 
-    ***REMOVED*** 1. 检查 Redis 缓存
+    # 1. 检查 Redis 缓存
     try:
         r = _get_redis()
         cached_url = r.get(cache_key)
@@ -138,7 +138,7 @@ async def synthesize(
         logger.warning(f"[tts] Redis unavailable, skip cache: {e}")
         r = None
 
-    ***REMOVED*** 2. 分段合成
+    # 2. 分段合成
     segments = (
         _split_text(clean_text) if len(clean_text) > MAX_SEGMENT_LENGTH
         else [clean_text]
@@ -158,7 +158,7 @@ async def synthesize(
         logger.error(f"[tts] synthesis failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"语音合成失败: {str(e)[:200]}")
 
-    ***REMOVED*** 3. 上传到 MinIO
+    # 3. 上传到 MinIO
     try:
         minio_client = get_minio_client()
         object_name = f"{text_hash}.mp3"
@@ -172,7 +172,7 @@ async def synthesize(
             content_type="audio/mpeg",
         )
 
-        ***REMOVED*** 构造公开 URL
+        # 构造公开 URL
         audio_url = f"/api/materials/files/tts/{object_name}"
         logger.info(f"[tts] uploaded to MinIO: {object_name}")
 
@@ -180,14 +180,14 @@ async def synthesize(
         logger.error(f"[tts] MinIO upload failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"音频上传失败: {str(e)[:200]}")
 
-    ***REMOVED*** 4. 写入 Redis 缓存
+    # 4. 写入 Redis 缓存
     if r:
         try:
             r.setex(cache_key, TTS_CACHE_TTL, audio_url)
         except Exception as e:
             logger.warning(f"[tts] cache write failed: {e}")
 
-    ***REMOVED*** 5. 估算时长（MP3 约 16KB/s）
+    # 5. 估算时长（MP3 约 16KB/s）
     duration_sec = len(audio_data) / 16000 if audio_data else 0
 
     return {

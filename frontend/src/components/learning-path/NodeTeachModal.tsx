@@ -24,9 +24,9 @@ interface Props {
 
 /** 难度中文 + 颜色 */
 const DIFFICULTY_CONFIG: Record<string, { label: string; color: string }> = {
-  beginner: { label: '入门', color: '***REMOVED***5b8c5a' },
-  intermediate: { label: '进阶', color: '***REMOVED***c96442' },
-  advanced: { label: '困难', color: '***REMOVED***8b3a3a' },
+  beginner: { label: '入门', color: '5b8c5a' },
+  intermediate: { label: '进阶', color: 'c96442' },
+  advanced: { label: '困难', color: '8b3a3a' },
 };
 
 /**
@@ -164,7 +164,7 @@ const TeachContent = memo(function TeachContent({ md }: { md: string }) {
             if (isInline) {
               return (
                 <code style={{
-                  background: 'var(--parchment)', color: '***REMOVED***b55738',
+                  background: 'var(--parchment)', color: 'b55738',
                   padding: '1px 5px', borderRadius: 3,
                   fontFamily: 'var(--font-mono)', fontSize: 12.5,
                 }}>

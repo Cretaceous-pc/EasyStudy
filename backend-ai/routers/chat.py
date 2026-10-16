@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-***REMOVED*** ── 编译 ChatState 图 ──
+# ── 编译 ChatState 图 ──
 chat_app = compile_chat_graph()
 
 
@@ -28,9 +28,9 @@ class ChatSendRequest(BaseModel):
     course_id: int
     conversation_id: Optional[int] = None
     message: str = Field(..., min_length=1, max_length=10000, description="用户消息，限制 10000 字符")
-    material_id: Optional[int] = None   ***REMOVED*** 课件 ID，用于课件级会话绑定
-    context_type: Optional[str] = None  ***REMOVED*** 'general' | 'courseware' | 'exercise'
-    context: Optional[dict] = None      ***REMOVED*** 可选附加上下文
+    material_id: Optional[int] = None # 课件 ID，用于课件级会话绑定
+    context_type: Optional[str] = None # 'general' | 'courseware' | 'exercise'
+    context: Optional[dict] = None # 可选附加上下文
 
 
 class ConversationListResponse(BaseModel):
@@ -46,7 +46,7 @@ async def chat_send(
     user_role: str = Depends(get_current_user_role),
 ):
     """发送消息（SSE 流式）"""
-    ***REMOVED*** 加载课程标题、画像和对话历史
+    # 加载课程标题、画像和对话历史
     from services.db import get_course_title, load_profile, get_conversation_messages
     course_title = get_course_title(request.course_id) or ""
     try:
@@ -55,15 +55,15 @@ async def chat_send(
     except Exception:
         profile = {}
 
-    ***REMOVED*** 加载历史消息作为上下文
+    # 加载历史消息作为上下文
     history_summary = ""
     if request.conversation_id:
         try:
-            ***REMOVED*** 取最近的 10 条作为上下文。
-            ***REMOVED*** get_conversation_messages 返回的是「最新的一页」（内部按 id DESC 取
-            ***REMOVED*** 再反转），因此这里末尾的 10 条就是最近 10 条；
-            ***REMOVED*** 修复前该函数返回的是最旧的一页，注释与实际行为不符，模型拿到的是
-            ***REMOVED*** 对话开头的旧上下文。
+            # 取最近的 10 条作为上下文。
+            # get_conversation_messages 返回的是「最新的一页」（内部按 id DESC 取
+            # 再反转），因此这里末尾的 10 条就是最近 10 条；
+            # 修复前该函数返回的是最旧的一页，注释与实际行为不符，模型拿到的是
+            # 对话开头的旧上下文。
             hist = get_conversation_messages(request.conversation_id, user_id, limit=10)
             msgs = hist.get("items", [])
             if msgs:
@@ -75,7 +75,7 @@ async def chat_send(
         except Exception:
             pass
 
-    ***REMOVED*** 构造初始 State
+    # 构造初始 State
     initial_state = ChatState(
         student_id=user_id,
         course_id=request.course_id,
@@ -99,7 +99,7 @@ async def chat_send(
     async def event_stream():
         """SSE 事件流"""
         try:
-            ***REMOVED*** 新对话创建事件
+            # 新对话创建事件
             new_conv_id = request.conversation_id
             if new_conv_id is None:
                 from services.db import create_conversation
@@ -115,10 +115,10 @@ async def chat_send(
                     "material_id": request.material_id,
                 })
 
-            ***REMOVED*** 更新 initial_state 中的 conversation_id
+            # 更新 initial_state 中的 conversation_id
             initial_state["conversation_id"] = new_conv_id
 
-            ***REMOVED*** 执行 LangGraph 图（90 秒总超时 — 复杂图表生成需要更长时间）
+            # 执行 LangGraph 图（90 秒总超时 — 复杂图表生成需要更长时间）
             import asyncio
             try:
                 result = await asyncio.wait_for(
@@ -131,13 +131,13 @@ async def chat_send(
                 yield sse_done(conversation_id=new_conv_id)
                 return
 
-            ***REMOVED*** 检查错误 — 发送 error 后必须 send done，否则前端永远等待
+            # 检查错误 — 发送 error 后必须 send done，否则前端永远等待
             if result.get("error"):
                 yield sse_error(result["error"], 50001)
                 yield sse_done(conversation_id=new_conv_id)
                 return
 
-            ***REMOVED*** 流式输出回复
+            # 流式输出回复
             for chunk in result.get("reply_chunks", []):
                 yield sse_event("message", {
                     "role": "assistant",
@@ -145,18 +145,18 @@ async def chat_send(
                     "done": False,
                 })
 
-            ***REMOVED*** 最后一条 message 事件标记 done
+            # 最后一条 message 事件标记 done
             yield sse_event("message", {
                 "role": "assistant",
                 "content": "",
                 "done": True,
             })
 
-            ***REMOVED*** action 事件
+            # action 事件
             for action in result.get("actions", []):
                 yield sse_event("action", action)
 
-            ***REMOVED*** done 事件
+            # done 事件
             yield sse_done(conversation_id=new_conv_id)
 
         except Exception as e:
@@ -220,12 +220,12 @@ async def create_new_session(
     from services.db import get_conversation_by_material, archive_conversation, create_conversation
     from services.db import get_course_title as db_get_course_title
 
-    ***REMOVED*** 归档旧会话
+    # 归档旧会话
     existing = get_conversation_by_material(user_id, body.course_id, body.material_id)
     if existing:
         archive_conversation(existing["conversation_id"], user_id)
 
-    ***REMOVED*** 创建新会话
+    # 创建新会话
     course_title = db_get_course_title(body.course_id) or "课程"
     title = f"{course_title} · 课件 {body.material_id}"
     new_id = create_conversation(
@@ -243,7 +243,7 @@ async def delete_conversation(
     """删除（归档）指定会话，仅允许会话所有者操作"""
     from services.db import archive_conversation, get_connection
 
-    ***REMOVED*** 直接查询归属（get_conversation_messages 对无权限返回空列表而非错误，不可用于鉴权）
+    # 直接查询归属（get_conversation_messages 对无权限返回空列表而非错误，不可用于鉴权）
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(

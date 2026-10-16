@@ -46,12 +46,12 @@ async def merge_streams(
             async for chunk in main_stream:
                 await queue.put(chunk)
         except Exception as e:
-            ***REMOVED*** 脱敏：不泄露异常原文，记录到日志
+            # 脱敏：不泄露异常原文，记录到日志
             logger.error("SSE main stream error: %s", str(e), exc_info=True)
             await queue.put(sse_error("生成过程中发生错误，请重试", 50001))
         finally:
             finished = True
-            await queue.put(None)  ***REMOVED*** 哨兵值，表示主数据流结束
+            await queue.put(None)  # 哨兵值，表示主数据流结束
 
     async def _heartbeat():
         """心跳协程：定期向队列注入 SSE 注释"""
@@ -60,40 +60,40 @@ async def merge_streams(
             if not finished:
                 await queue.put(f": heartbeat {int(time.time())}\n\n")
 
-    ***REMOVED*** 并行启动主数据流读取和心跳
+    # 并行启动主数据流读取和心跳
     main_task = asyncio.create_task(_read_main())
     hb_task = asyncio.create_task(_heartbeat())
 
     try:
         while True:
-            ***REMOVED*** 计算距上次数据的时间
+            # 计算距上次数据的时间
             elapsed = time.monotonic() - last_data_time
             remaining = timeout - elapsed
 
             if remaining <= 0:
-                ***REMOVED*** 超时
+                # 超时
                 yield sse_error("响应超时，请重试", 50001)
                 return
 
             try:
-                ***REMOVED*** 等待数据或超时
+                # 等待数据或超时
                 item = await asyncio.wait_for(queue.get(), timeout=remaining)
             except asyncio.TimeoutError:
                 yield sse_error("响应超时，请重试", 50001)
                 return
 
             if item is None:
-                ***REMOVED*** 主数据流结束
+                # 主数据流结束
                 return
 
             yield item
-            ***REMOVED*** 心跳注释不重置超时计时器，只有真实数据才重置
+            # 心跳注释不重置超时计时器，只有真实数据才重置
             if not item.startswith(":"):
                 last_data_time = time.monotonic()
     finally:
         main_task.cancel()
         hb_task.cancel()
-        ***REMOVED*** 确保任务被清理
+        # 确保任务被清理
         for t in (main_task, hb_task):
             try:
                 await t
@@ -114,7 +114,7 @@ def create_sse_response(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  ***REMOVED*** Nginx 不缓冲
+            "X-Accel-Buffering": "no",  # Nginx 不缓冲
         },
     )
 

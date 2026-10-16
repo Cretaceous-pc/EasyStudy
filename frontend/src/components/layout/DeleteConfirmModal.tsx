@@ -28,7 +28,7 @@ export default function DeleteConfirmModal({
         <div className="flex items-center gap-2.5">
           <div
             className="flex items-center justify-center rounded-full flex-shrink-0"
-            style={{ width: 28, height: 28, background: '***REMOVED***fdf3e0', color: '***REMOVED***d4882a', fontSize: 14 }}
+            style={{ width: 28, height: 28, background: '#fdf3e0', color: '#d4882a', fontSize: 14 }}
           >
             <ExclamationCircleOutlined />
           </div>

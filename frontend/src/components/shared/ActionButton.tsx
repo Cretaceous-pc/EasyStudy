@@ -16,7 +16,7 @@ export default function ActionButton({ icon, label, primary, onClick }: ActionBu
         fontSize: 12,
         fontWeight: 500,
         background: primary ? 'var(--accent)' : 'var(--parchment)',
-        color: primary ? '***REMOVED***fff' : 'var(--olive-gray)',
+        color: primary ? '#fff' : 'var(--olive-gray)',
         transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         boxShadow: primary ? '0 1px 3px rgba(201,100,66,0.2)' : 'none',
       }}

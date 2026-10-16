@@ -11,14 +11,14 @@ import {
 import { useTeacherStore } from '../../stores';
 
 const typeIconMap: Record<string, React.ReactNode> = {
-  standardized_md: <FileTextOutlined style={{ color: '***REMOVED***2e7d32' }} />,
-  raw_pdf: <FilePdfOutlined style={{ color: '***REMOVED***d32f2f' }} />,
+  standardized_md: <FileTextOutlined style={{ color: '#2e7d32' }} />,
+  raw_pdf: <FilePdfOutlined style={{ color: '#d32f2f' }} />,
 };
 
 const statusMap: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  completed: { label: '已完成', color: '***REMOVED***2e7d32', icon: <CheckCircleOutlined style={{ fontSize: 12 }} /> },
-  pending: { label: '处理中', color: '***REMOVED***ed6c02', icon: <ClockCircleOutlined style={{ fontSize: 12 }} /> },
-  failed: { label: '失败', color: '***REMOVED***d32f2f', icon: <ClockCircleOutlined style={{ fontSize: 12 }} /> },
+  completed: { label: '已完成', color: '#2e7d32', icon: <CheckCircleOutlined style={{ fontSize: 12 }} /> },
+  pending: { label: '处理中', color: '#ed6c02', icon: <ClockCircleOutlined style={{ fontSize: 12 }} /> },
+  failed: { label: '失败', color: '#d32f2f', icon: <ClockCircleOutlined style={{ fontSize: 12 }} /> },
 };
 
 export default function MaterialManageView() {

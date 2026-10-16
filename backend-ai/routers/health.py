@@ -17,7 +17,7 @@ async def health_check(user_id: int = Depends(get_current_user_id)):
     settings = get_settings()
     checks = {}
 
-    ***REMOVED*** ── PostgreSQL ──
+    # ── PostgreSQL ──
     try:
         conn = pg_connect(
             host=settings.db_host,
@@ -33,7 +33,7 @@ async def health_check(user_id: int = Depends(get_current_user_id)):
     except Exception:
         checks["postgres"] = "unreachable"
 
-    ***REMOVED*** ── Redis ──
+    # ── Redis ──
     try:
         r = redis_lib.Redis(
             host=settings.redis_host,
@@ -47,7 +47,7 @@ async def health_check(user_id: int = Depends(get_current_user_id)):
     except Exception:
         checks["redis"] = "unreachable"
 
-    ***REMOVED*** ── MinIO ──
+    # ── MinIO ──
     try:
         client = Minio(
             settings.minio_endpoint,
@@ -60,7 +60,7 @@ async def health_check(user_id: int = Depends(get_current_user_id)):
     except Exception:
         checks["minio"] = "unreachable"
 
-    ***REMOVED*** ── API Key 状态（不泄露具体值） ──
+    # ── API Key 状态（不泄露具体值） ──
     checks["deepseek"] = "configured" if settings.deepseek_api_key else "missing"
     checks["xunfei"] = "configured" if (
         settings.xunfei_app_id and settings.xunfei_api_key and settings.xunfei_api_secret

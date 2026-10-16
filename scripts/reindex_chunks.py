@@ -1,4 +1,4 @@
-***REMOVED***!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 easyStudy — 知识库批量向量化脚本
 
@@ -7,23 +7,23 @@ easyStudy — 知识库批量向量化脚本
 写入 ChromaDB。
 
 用法:
-    ***REMOVED*** 本地开发 (API 模式, 需要 .env 中配置 embedding_backend=api)
+    # 本地开发 (API 模式, 需要 .env 中配置 embedding_backend=api)
     cd backend-ai && python ../scripts/reindex_chunks.py
 
-    ***REMOVED*** 服务器 Docker 容器内
+    # 服务器 Docker 容器内
     docker exec easystudy-fastapi python scripts/reindex_chunks.py
 
-    ***REMOVED*** 预览模式（不实际写入）
+    # 预览模式（不实际写入）
     python scripts/reindex_chunks.py --dry-run
 
-    ***REMOVED*** 指定单个课程
+    # 指定单个课程
     python scripts/reindex_chunks.py --course-id 5
 
 环境变量 (在 .env 中配置):
-    EMBEDDING_BACKEND=api          ***REMOVED*** chroma-builtin | api
+    EMBEDDING_BACKEND=api           chroma-builtin | api
     EMBEDDING_MODEL=text-embedding-3-small
-    EMBEDDING_API_KEY=...          ***REMOVED*** 默认复用 DEEPSEEK_API_KEY
-    EMBEDDING_BASE_URL=...         ***REMOVED*** 默认复用 DEEPSEEK_BASE_URL
+    EMBEDDING_API_KEY=...           默认复用 DEEPSEEK_API_KEY
+    EMBEDDING_BASE_URL=...          默认复用 DEEPSEEK_BASE_URL
 """
 
 import argparse
@@ -33,7 +33,7 @@ import time
 import logging
 from collections import defaultdict
 
-***REMOVED*** 确保 backend-ai 在 Python 路径中
+# 确保 backend-ai 在 Python 路径中
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_DIR = os.path.dirname(_SCRIPT_DIR)
 _BACKEND_AI_DIR = os.path.join(_PROJECT_DIR, "backend-ai")
@@ -101,7 +101,7 @@ def load_chunks(conn, course_id: int = 0):
 def main():
     args = parse_args()
 
-    ***REMOVED*** 延迟导入，确保 sys.path 已设置
+    # 延迟导入，确保 sys.path 已设置
     from services.config import get_settings
     from rag.vectorstore import get_vectorstore
 
@@ -116,7 +116,7 @@ def main():
         api_key = settings.embedding_api_key or settings.deepseek_api_key
         base_url = settings.embedding_base_url or settings.deepseek_base_url
         logger.info(f"   API Base URL: {base_url}")
-        ***REMOVED*** 只回显是否存在与长度，绝不打印密钥本身（即使是前缀，也已构成信息泄漏）
+        # 只回显是否存在与长度，绝不打印密钥本身（即使是前缀，也已构成信息泄漏）
         logger.info(f"   API Key: **已配置（长度 {len(api_key)}）**" if api_key else "   API Key: **未配置**")
     logger.info(f"   Chroma: {settings.chroma_host}:{settings.chroma_port}")
     logger.info(f"   批次大小: {args.batch_size}")
@@ -124,7 +124,7 @@ def main():
         logger.info("   ** DRY RUN 模式 — 不会写入数据 **")
     logger.info("=" * 60)
 
-    ***REMOVED*** ── 连接数据库 ──
+    # ── 连接数据库 ──
     logger.info("连接 PostgreSQL...")
     try:
         pg_conn = get_pg_conn(settings)
@@ -132,7 +132,7 @@ def main():
         logger.error(f"数据库连接失败: {e}")
         sys.exit(1)
 
-    ***REMOVED*** ── 读取 chunks ──
+    # ── 读取 chunks ──
     logger.info("读取 knowledge_chunks...")
     try:
         course_groups = load_chunks(pg_conn, args.course_id)
@@ -150,7 +150,7 @@ def main():
 
     logger.info(f"共 {len(course_groups)} 门课程, {total_chunks} 条 chunk")
 
-    ***REMOVED*** ── 显示分布 ──
+    # ── 显示分布 ──
     for cid in sorted(course_groups.keys()):
         logger.info(f"   course-{cid}: {len(course_groups[cid])} chunks")
 
@@ -158,7 +158,7 @@ def main():
         logger.info("Dry run 完成，退出。")
         return
 
-    ***REMOVED*** ── 连接 ChromaDB ──
+    # ── 连接 ChromaDB ──
     logger.info("连接 ChromaDB...")
     try:
         vs = get_vectorstore("easystudy_chunks")
@@ -166,7 +166,7 @@ def main():
         logger.error(f"ChromaDB 连接失败: {e}")
         sys.exit(1)
 
-    ***REMOVED*** ── 逐课程处理 ──
+    # ── 逐课程处理 ──
     ok = 0
     fail = 0
 
@@ -175,12 +175,12 @@ def main():
         logger.info(f"\n── 处理 course-{course_id} ({len(chunks)} chunks) ──")
 
         try:
-            ***REMOVED*** 清除旧向量（幂等）
+            # 清除旧向量（幂等）
             if not args.no_clear:
                 logger.info(f"   清除 course-{course_id} 已有向量...")
                 vs.delete_by_course(course_id)
 
-            ***REMOVED*** 批量 upsert
+            # 批量 upsert
             for i in range(0, len(chunks), args.batch_size):
                 batch = chunks[i:i + args.batch_size]
                 batch_ids = [c["vector_id"] for c in batch]
@@ -216,7 +216,7 @@ def main():
             fail += len(chunks)
             continue
 
-    ***REMOVED*** ── 验证 ──
+    # ── 验证 ──
     logger.info(f"\n{'=' * 60}")
     logger.info(f"写入完成: {ok} 成功, {fail} 失败")
     try:

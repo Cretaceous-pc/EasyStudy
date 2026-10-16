@@ -25,23 +25,23 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
-***REMOVED*** 模块级编译图（启动时编译一次）
+# 模块级编译图（启动时编译一次）
 profile_app = compile_profile_graph()
 
 
-***REMOVED*** ── 请求/响应模型 ──
+# ── 请求/响应模型 ──
 
 class ProfileUpdateRequest(BaseModel):
     course_id: int
-    updates: dict  ***REMOVED*** {dimension: {value, label}}
+    updates: dict # {dimension: {value, label}}
 
 
 class ProfileInitRequest(BaseModel):
     course_id: int
-    answers: dict  ***REMOVED*** {dimension_key: value}
+    answers: dict # {dimension_key: value}
 
 
-***REMOVED*** ── 维度 label 映射 ──
+# ── 维度 label 映射 ──
 
 DIMENSION_LABELS = {
     "knowledge_base": "知识基础",
@@ -70,7 +70,7 @@ DIMENSION_VALUE_LABELS = {
 }
 
 
-***REMOVED*** ── 端点 ──
+# ── 端点 ──
 
 @router.get("")
 @router.get("")
@@ -99,7 +99,7 @@ async def update_profile(
     current_profile = current["profile"]
     current_version = current["version"]
 
-    ***REMOVED*** 合并手动更新
+    # 合并手动更新
     for dim, dim_data in req.updates.items():
         if isinstance(dim_data, dict):
             from datetime import datetime, timezone
@@ -108,7 +108,7 @@ async def update_profile(
 
     new_version = current_version + 1
 
-    ***REMOVED*** 保存
+    # 保存
     save_profile(user_id, req.course_id, current_profile, new_version)
     save_profile_snapshot(
         user_id, req.course_id, current_profile, new_version, "manual"
@@ -152,18 +152,18 @@ async def init_profile(
         label = DIMENSION_LABELS[dim_key]
         value_label = dim_value
 
-        ***REMOVED*** 尝试从映射表获取中文标签
+        # 尝试从映射表获取中文标签
         if dim_key in DIMENSION_VALUE_LABELS and dim_value in DIMENSION_VALUE_LABELS[dim_key]:
             value_label = DIMENSION_VALUE_LABELS[dim_key][dim_value]
 
-        ***REMOVED*** engagement 特殊处理：百分比映射到 0.0-1.0
+        # engagement 特殊处理：百分比映射到 0.0-1.0
         if dim_key == "engagement":
             try:
                 dim_value = float(dim_value)
             except (ValueError, TypeError):
                 dim_value = 0.5
             value_label = f"{int(dim_value * 100)}%"
-        ***REMOVED*** error_prone_points 特殊处理：列表
+        # error_prone_points 特殊处理：列表
         elif dim_key == "error_prone_points":
             if isinstance(dim_value, list):
                 value_label = ", ".join(dim_value) if dim_value else "无"
@@ -200,15 +200,15 @@ async def reset_profile(
     current = load_profile(user_id, course_id)
 
     if current["profile"] and current["version"] > 0:
-        ***REMOVED*** 保存重置前快照
-        ***REMOVED*** 注意签名是 (student_id, course_id, profile, version, trigger) —— 共 5 个参数。
-        ***REMOVED*** 原实现传了 4 个且缺少 course_id，任何已有画像的用户调用本接口都会
-        ***REMOVED*** 抛 TypeError 导致 500（POST /profile/reset 完全不可用）。
+        # 保存重置前快照
+        # 注意签名是 (student_id, course_id, profile, version, trigger) —— 共 5 个参数。
+        # 原实现传了 4 个且缺少 course_id，任何已有画像的用户调用本接口都会
+        # 抛 TypeError 导致 500（POST /profile/reset 完全不可用）。
         save_profile_snapshot(
             user_id, course_id, current["profile"], current["version"], "reset"
         )
 
-    ***REMOVED*** 写入空画像
+    # 写入空画像
     save_profile(user_id, course_id, {}, 0)
 
     logger.info(
@@ -224,7 +224,7 @@ async def trigger_cold_start(
     user_id: int = Depends(get_current_user_id),
 ):
     """触发画像冷启动对话引导（首次选课后调用）"""
-    ***REMOVED*** 检查是否已有画像
+    # 检查是否已有画像
     current = load_profile(user_id, course_id)
     if current["profile"] and current["version"] > 0:
         return {

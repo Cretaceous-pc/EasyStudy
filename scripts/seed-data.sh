@@ -1,8 +1,8 @@
-***REMOVED***!/bin/bash
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** easyStudy — 插入测试数据 (Linux)
-***REMOVED*** 用法: bash scripts/seed-data.sh
-***REMOVED*** ═══════════════════════════════════════════════════════
+#!/bin/bash
+# ═══════════════════════════════════════════════════════
+# easyStudy — 插入测试数据 (Linux)
+# 用法: bash scripts/seed-data.sh
+# ═══════════════════════════════════════════════════════
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -12,7 +12,7 @@ echo "  easyStudy -- 插入测试数据"
 echo "============================================"
 echo ""
 
-***REMOVED*** ── 第一步：用户 + 课程 ──
+# ── 第一步：用户 + 课程 ──
 echo "第一步：插入用户和课程..."
 python "$SCRIPT_DIR/seed-data.py"
 if [ $? -ne 0 ]; then
@@ -21,7 +21,7 @@ if [ $? -ne 0 ]; then
 fi
 echo ""
 
-***REMOVED*** ── 第二步：演示数据 ──
+# ── 第二步：演示数据 ──
 echo "第二步：插入演示数据（对话、资源、路径）..."
 cat "$SCRIPT_DIR/seed-test-data.sql" | docker exec -i easystudy-postgres psql -U easystudy -d easystudy 2>/dev/null
 echo ""

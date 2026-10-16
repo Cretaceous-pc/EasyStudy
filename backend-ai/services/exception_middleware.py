@@ -19,14 +19,14 @@ class ExceptionToSSEMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             return response
         except Exception as e:
-            ***REMOVED*** 记录完整异常到服务端日志（脱敏：不发给客户端）
+            # 记录完整异常到服务端日志（脱敏：不发给客户端）
             logger.error(
                 "Unhandled exception on %s %s: %s",
                 request.method, request.url.path, str(e),
                 exc_info=True,
             )
 
-            ***REMOVED*** 如果是 SSE 请求，返回 text/event-stream 格式的错误
+            # 如果是 SSE 请求，返回 text/event-stream 格式的错误
             accept = request.headers.get("accept", "")
             if "text/event-stream" in accept:
                 from starlette.responses import StreamingResponse

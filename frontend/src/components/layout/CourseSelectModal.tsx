@@ -70,7 +70,7 @@ export default function CourseSelectModal({ open, onCancel, onConfirm }: CourseS
             className="border-none cursor-pointer text-sm rounded-lg px-4 py-2 transition-all flex items-center gap-1.5"
             style={{
               background: selectedId ? 'var(--accent)' : 'var(--stone-gray)',
-              color: '***REMOVED***fff',
+              color: '#fff',
               fontFamily: 'var(--font-sans)',
               opacity: selectedId ? 1 : 0.5,
               cursor: selectedId ? 'pointer' : 'not-allowed',
@@ -117,7 +117,7 @@ export default function CourseSelectModal({ open, onCancel, onConfirm }: CourseS
                     className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{
                       background: isSelected ? 'var(--accent)' : 'var(--warm-sand)',
-                      color: isSelected ? '***REMOVED***fff' : 'var(--stone-gray)',
+                      color: isSelected ? '#fff' : 'var(--stone-gray)',
                       fontSize: 16,
                       transition: 'all 0.2s',
                     }}
@@ -159,7 +159,7 @@ export default function CourseSelectModal({ open, onCancel, onConfirm }: CourseS
                       className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
                       style={{
                         background: 'var(--accent)',
-                        color: '***REMOVED***fff',
+                        color: '#fff',
                         fontSize: 10,
                         marginTop: 2,
                       }}

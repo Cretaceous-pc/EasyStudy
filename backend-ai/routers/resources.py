@@ -21,14 +21,14 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-***REMOVED*** 资源生成总时限：与对话链路保持一致，避免上游挂起时连接被长期占用
-***REMOVED*** （原先 ainvoke 没有超时，只靠 SSE 层 300s 静默超时兜底）
+# 资源生成总时限：与对话链路保持一致，避免上游挂起时连接被长期占用
+# （原先 ainvoke 没有超时，只靠 SSE 层 300s 静默超时兜底）
 RESOURCE_GEN_TIMEOUT_SEC = 240.0
 
-***REMOVED*** ── 编译 ResourceGenState 图 ──
+# ── 编译 ResourceGenState 图 ──
 resource_gen_app = compile_resource_gen_graph()
 
-***REMOVED*** 允许的资源类型（与 _RESOURCE_NODE 保持一致，避免拼错类型导致整张图失败）
+# 允许的资源类型（与 _RESOURCE_NODE 保持一致，避免拼错类型导致整张图失败）
 ResourceTypeName = Literal["document", "mermaid", "exercise_set", "code_case", "reading_material"]
 
 
@@ -60,11 +60,11 @@ async def generate_resources(
     user_role: str = Depends(get_current_user_role),
 ):
     """资源生成（SSE 流式）"""
-    ***REMOVED*** 准入校验：原实现不校验选课，任何登录用户都能对任意 course_id 生成资源，
-    ***REMOVED*** 既消耗大模型额度，也把内容写进该课程的共享知识库（影响其他学生检索）。
+    # 准入校验：原实现不校验选课，任何登录用户都能对任意 course_id 生成资源，
+    # 既消耗大模型额度，也把内容写进该课程的共享知识库（影响其他学生检索）。
     _require_enrollment(user_id, request.course_id)
 
-    ***REMOVED*** 构造初始 State
+    # 构造初始 State
     initial_state = ResourceGenState(
         student_id=user_id,
         course_id=request.course_id,
@@ -92,26 +92,26 @@ async def generate_resources(
         """
         done_sent = False
         try:
-            ***REMOVED*** plan 事件
+            # plan 事件
             yield sse_event("plan", {
                 "topic": request.topic,
                 "resource_types": request.resource_types,
             })
 
-            ***REMOVED*** 执行图（带超时，避免上游挂起时连接一直占用）
+            # 执行图（带超时，避免上游挂起时连接一直占用）
             result = await asyncio.wait_for(
                 resource_gen_app.ainvoke(initial_state),
                 timeout=RESOURCE_GEN_TIMEOUT_SEC,
             )
 
-            ***REMOVED*** 检查错误
+            # 检查错误
             if result.get("error"):
                 yield sse_error(result["error"], 50002)
                 yield sse_done(generated_count=0, failed_count=0, resource_ids=[])
                 done_sent = True
                 return
 
-            ***REMOVED*** progress + resource 事件：从 Graph 结果中提取真实数据
+            # progress + resource 事件：从 Graph 结果中提取真实数据
             generated = result.get("generated", {})
             resource_ids = result.get("resource_ids", [])
             rid_idx = 0
@@ -127,7 +127,7 @@ async def generate_resources(
                     rid = resource_ids[rid_idx] if rid_idx < len(resource_ids) else None
                     rid_idx += 1
                     raw_title = gen_result.get("title", f"{rt}: {request.topic}")
-                    ***REMOVED*** 去掉 LLM 生成的类型前缀 "document: " / "mermaid: " 等
+                    # 去掉 LLM 生成的类型前缀 "document: " / "mermaid: " 等
                     clean_title = raw_title
                     for prefix in ["document: ", "mermaid: ", "exercise_set: ",
                                    "code_case: ", "reading_material: ",
@@ -144,7 +144,7 @@ async def generate_resources(
                         "status": "generated",
                     })
 
-            ***REMOVED*** done 事件
+            # done 事件
             yield sse_done(
                 generated_count=result.get("generated_count", 0),
                 failed_count=result.get("failed_count", 0),
@@ -159,7 +159,7 @@ async def generate_resources(
             logger.error("Resource generation error: %s", str(e), exc_info=True)
             yield sse_error("资源生成失败，请稍后重试", 50002)
         finally:
-            ***REMOVED*** 兜底：任何异常路径都必须补一个 done，否则前端永久等待
+            # 兜底：任何异常路径都必须补一个 done，否则前端永久等待
             if not done_sent:
                 yield sse_done(generated_count=0, failed_count=0, resource_ids=[])
 
@@ -180,14 +180,14 @@ async def list_resources(
     _require_enrollment(user_id, course_id)
     resources = get_available_resources(user_id, course_id)
 
-    ***REMOVED*** 过滤
+    # 过滤
     filtered = resources
     if resource_type:
         filtered = [r for r in filtered if r["resource_type"] == resource_type]
     if topic:
         filtered = [r for r in filtered if topic in (r.get("topic") or "")]
 
-    ***REMOVED*** 分页
+    # 分页
     total = len(filtered)
     start = (page - 1) * page_size
     items = filtered[start:start + page_size]
@@ -253,7 +253,7 @@ async def download_resource(
         if rt == "exercise_set":
             md = ""
             for ex in c.get("exercises", []):
-                md += f"***REMOVED******REMOVED*** {ex.get('question', '')}\n\n"
+                md += f" {ex.get('question', '')}\n\n"
                 for opt in ex.get("options", []):
                     md += f"- {opt}\n"
                 md += f"\n**答案**: {ex.get('answer', '')}\n\n"
@@ -262,7 +262,7 @@ async def download_resource(
                 md += "---\n\n"
             return md
         if rt == "code_case":
-            ***REMOVED*** LLM 已生成完整 Markdown，直接返回
+            # LLM 已生成完整 Markdown，直接返回
             if "markdown" in c:
                 return c["markdown"]
             return f"```{c.get('language', '')}\n{c.get('code', '')}\n```\n\n{c.get('explanation', '')}"
@@ -272,13 +272,13 @@ async def download_resource(
 
     def _slugify(s: str) -> str:
         s = s.lower().strip()
-        ***REMOVED*** 只保留 ASCII 字母数字、空格、连字符，中文全部移除
-        s = _re.sub(r'[^\x00-\x7F]+', '', s)  ***REMOVED*** 先移除所有非 ASCII
+        # 只保留 ASCII 字母数字、空格、连字符，中文全部移除
+        s = _re.sub(r'[^\x00-\x7F]+', '', s) # 先移除所有非 ASCII
         s = _re.sub(r'[^\w\s-]', '', s, flags=_re.ASCII)
         s = _re.sub(r'\s+', '-', s)
         return s.strip('-')[:80] or 'resource'
 
-    ***REMOVED*** 尝试从 MinIO 获取已入库文件
+    # 尝试从 MinIO 获取已入库文件
     try:
         from services.minio_client import get_minio_client
         from services.config import get_settings
@@ -308,7 +308,7 @@ async def download_resource(
     except Exception:
         pass
 
-    ***REMOVED*** Fallback: 从 DB content 实时生成
+    # Fallback: 从 DB content 实时生成
     md_content = _content_to_md(resource_type, content)
     return StreamingResponse(
         io.BytesIO(md_content.encode("utf-8")),
@@ -328,12 +328,12 @@ async def delete_resource(
     from services.db import get_resource_by_id, delete_resource as db_delete_resource
     from services.minio_client import get_minio_client
 
-    ***REMOVED*** 校验资源存在且属于当前用户
+    # 校验资源存在且属于当前用户
     resource = get_resource_by_id(resource_id, user_id)
     if not resource:
         raise HTTPException(status_code=404, detail="资源不存在或无权访问")
 
-    ***REMOVED*** 尝试删除 MinIO 文件（路径须与 resource_ingest.ingest_resource 一致）
+    # 尝试删除 MinIO 文件（路径须与 resource_ingest.ingest_resource 一致）
     try:
         import re as _re
 
@@ -361,7 +361,7 @@ async def delete_resource(
     except Exception as e:
         logger.warning(f"[delete_resource] MinIO 删除失败（继续删除DB记录）: {e}")
 
-    ***REMOVED*** 删除 DB 记录
+    # 删除 DB 记录
     db_delete_resource(resource_id)
     logger.info(f"[delete_resource] 资源已删除: id={resource_id}, student={user_id}")
 

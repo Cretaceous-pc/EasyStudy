@@ -1,35 +1,35 @@
-***REMOVED*** ── 凭证：绝不打进镜像 ──
+# ── 凭证：绝不打进镜像 ──
 .env
 .env.*
 !.env.example
 
-***REMOVED*** 构建产物（多阶段构建只需源码与 pom）
+# 构建产物（多阶段构建只需源码与 pom）
 target/
 *.jar
 *.war
 
-***REMOVED*** 构建工具缓存
+# 构建工具缓存
 .mvn/
 .m2/
 
-***REMOVED*** 日志与临时文件
+# 日志与临时文件
 *.log
 logs/
 tmp/
 .git-tmp/
 
-***REMOVED*** 备份文件
+# 备份文件
 *.bak
 *.orig
 
-***REMOVED*** 编辑器 / 系统
+# 编辑器 / 系统
 .idea/
 .vscode/
 *.swp
 .DS_Store
 Thumbs.db
 
-***REMOVED*** 版本控制与文档
+# 版本控制与文档
 .git/
 .gitignore
 README.md

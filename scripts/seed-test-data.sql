@@ -51,8 +51,8 @@ END $$;
 INSERT INTO resources (student_id, course_id, resource_type, title, topic, content, is_validated, status)
 SELECT u.id, 1, t.resource_type, t.title, t.topic, t.content, true, 'completed'
 FROM users u, (VALUES
-  ('student_li', 'document',    'Python 基础语法总结', '基础语法', '{"raw":"***REMOVED******REMOVED*** Python基础\n- 变量与数据类型\n- 条件语句if/elif/else\n- 循环for/while"}'::jsonb),
-  ('student_li', 'mind_map',    'Python 函数思维导图', '函数',    '{"raw":"***REMOVED*** 函数\n- def关键字\n- 参数类型\n- 返回值"}'::jsonb),
+  ('student_li', 'document',    'Python 基础语法总结', '基础语法', '{"raw":"## Python基础\n- 变量与数据类型\n- 条件语句if/elif/else\n- 循环for/while"}'::jsonb),
+  ('student_li', 'mind_map',    'Python 函数思维导图', '函数',    '{"raw":"# 函数\n- def关键字\n- 参数类型\n- 返回值"}'::jsonb),
   ('student_li', 'exercise_set','Python 基础练习',    '基础语法', '{"exercises":[{"id":1,"type":"choice","question":"Python不变类型是？","options":["list","dict","tuple","set"],"answer":2}]}'::jsonb)
 ) AS t(username, resource_type, title, topic, content)
 WHERE u.username = t.username;

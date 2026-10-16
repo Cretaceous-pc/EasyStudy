@@ -155,7 +155,7 @@ export default function DirectoryBar({ visible }: DirectoryBarProps) {
           onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = 'var(--warm-sand)'; e.currentTarget.style.color = 'var(--near-black)'; } }}
           onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = hasChildren ? 'var(--charcoal-warm)' : 'var(--olive-gray)'; } }}>
           {hasChildren ? <span style={{ fontSize: 9, color: 'var(--stone-gray)', width: 10, textAlign: 'center' }}>{isExpanded ? <DownOutlined /> : <RightOutlined />}</span> : <span style={{ width: 10 }} />}
-          {hasChildren ? (isExpanded ? <FolderOpenOutlined style={{ fontSize: 12, color: '***REMOVED***d4a853' }} /> : <FolderOutlined style={{ fontSize: 12, color: '***REMOVED***d4a853' }} />) : <FileTextOutlined style={{ fontSize: 12, color: 'var(--stone-gray)' }} />}
+          {hasChildren ? (isExpanded ? <FolderOpenOutlined style={{ fontSize: 12, color: '#d4a853' }} /> : <FolderOutlined style={{ fontSize: 12, color: '#d4a853' }} />) : <FileTextOutlined style={{ fontSize: 12, color: 'var(--stone-gray)' }} />}
           <span className="flex-1 truncate">{node.title}</span>
         </div>
         {hasChildren && isExpanded && <div>{node.children!.map((child) => renderNode(child, depth + 1))}</div>}
@@ -260,7 +260,7 @@ export default function DirectoryBar({ visible }: DirectoryBarProps) {
                 className="border-none cursor-pointer rounded-lg px-4 py-1.5 text-sm transition-all"
                 style={{
                   background: 'var(--accent)',
-                  color: '***REMOVED***fff',
+                  color: '#fff',
                   fontFamily: 'var(--font-sans)',
                   boxShadow: '0 1px 3px rgba(201,100,66,0.25)',
                 }}

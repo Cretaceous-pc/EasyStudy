@@ -48,31 +48,31 @@ export default class ErrorBoundary extends Component<Props, State> {
           alignItems: 'center',
           justifyContent: 'center',
           padding: 24,
-          background: 'var(--ivory, ***REMOVED***faf9f5)',
+          background: 'var(--ivory, faf9f5)',
           fontFamily: 'var(--font-sans, system-ui, sans-serif)',
         }}
       >
         <div
           style={{
             maxWidth: 520,
-            border: '1px solid var(--border-cream, ***REMOVED***e8e2d6)',
+            border: '1px solid var(--border-cream, e8e2d6)',
             borderRadius: 12,
-            background: '***REMOVED***fff',
+            background: 'fff',
             padding: 28,
           }}
         >
-          <div style={{ fontSize: 16, fontWeight: 600, color: '***REMOVED***b55738', marginBottom: 10 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: 'b55738', marginBottom: 10 }}>
             页面渲染出错
           </div>
-          <div style={{ fontSize: 13, color: '***REMOVED***4d4c48', lineHeight: 1.7, marginBottom: 16 }}>
+          <div style={{ fontSize: 13, color: '4d4c48', lineHeight: 1.7, marginBottom: 16 }}>
             这是前端渲染异常，不是你的操作问题。可以重试；若反复出现，
             请把下面这行信息反馈给管理员。
           </div>
           <pre
             style={{
               fontSize: 12,
-              background: 'var(--parchment, ***REMOVED***f5f0e8)',
-              border: '1px solid var(--border-cream, ***REMOVED***e8e2d6)',
+              background: 'var(--parchment, f5f0e8)',
+              border: '1px solid var(--border-cream, e8e2d6)',
               borderRadius: 8,
               padding: 12,
               overflowX: 'auto',
@@ -89,9 +89,9 @@ export default class ErrorBoundary extends Component<Props, State> {
                 fontSize: 13,
                 padding: '7px 16px',
                 borderRadius: 6,
-                border: '1px solid var(--accent, ***REMOVED***c96442)',
-                background: 'var(--accent, ***REMOVED***c96442)',
-                color: '***REMOVED***fff',
+                border: '1px solid var(--accent, c96442)',
+                background: 'var(--accent, c96442)',
+                color: 'fff',
                 cursor: 'pointer',
               }}
             >
@@ -103,9 +103,9 @@ export default class ErrorBoundary extends Component<Props, State> {
                 fontSize: 13,
                 padding: '7px 16px',
                 borderRadius: 6,
-                border: '1px solid var(--border-cream, ***REMOVED***e8e2d6)',
-                background: '***REMOVED***fff',
-                color: '***REMOVED***4d4c48',
+                border: '1px solid var(--border-cream, e8e2d6)',
+                background: 'fff',
+                color: '4d4c48',
                 cursor: 'pointer',
               }}
             >

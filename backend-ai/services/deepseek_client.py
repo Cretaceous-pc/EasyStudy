@@ -20,7 +20,7 @@ from services.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-***REMOVED*** ── 全局客户端（懒初始化） ──
+# ── 全局客户端（懒初始化） ──
 _client: Optional[AsyncOpenAI] = None
 
 
@@ -29,8 +29,8 @@ def _create_client() -> AsyncOpenAI:
     settings = get_settings()
     return AsyncOpenAI(
         api_key=settings.deepseek_api_key,
-        base_url=settings.deepseek_base_url,  ***REMOVED*** OpenAI SDK 要求含 /v1 的完整 base URL
-        timeout=180.0,  ***REMOVED*** 3 分钟，匹配路径生成长耗时
+        base_url=settings.deepseek_base_url,  # OpenAI SDK 要求含 /v1 的完整 base URL
+        timeout=180.0,  # 3 分钟，匹配路径生成长耗时
         max_retries=1,
     )
 
@@ -88,7 +88,7 @@ async def deepseek_generate(
                 attempt + 1, max_retries + 1, timeout,
             )
             if attempt < max_retries:
-                await asyncio.sleep(2 ** attempt)  ***REMOVED*** 指数退避: 1s, 2s, 4s
+                await asyncio.sleep(2 ** attempt)  # 指数退避: 1s, 2s, 4s
                 continue
             raise TimeoutError("DeepSeek API 调用超时")
 
@@ -98,7 +98,7 @@ async def deepseek_generate(
                 attempt + 1, max_retries + 1, str(e)[:200],
             )
             if attempt < max_retries:
-                _reset_client()  ***REMOVED*** 重建客户端，避免连接池污染
+                _reset_client()  # 重建客户端，避免连接池污染
                 await asyncio.sleep(2 ** attempt)
                 continue
             raise RuntimeError(f"DeepSeek API 连接失败（已重试 {max_retries} 次）: {str(e)[:200]}")
@@ -126,10 +126,10 @@ async def deepseek_generate_json(
     for attempt in range(max_retries + 1):
         text = await deepseek_generate(prompt, system=system, model=model, timeout=timeout, temperature=temperature)
         try:
-            ***REMOVED*** 尝试提取 JSON 块（可能被 markdown 代码块包裹）
+            # 尝试提取 JSON 块（可能被 markdown 代码块包裹）
             text = text.strip()
             if text.startswith("```"):
-                ***REMOVED*** 去掉 ```json 和 ```
+                # 去掉 ```json 和 ```
                 lines = text.split("\n")
                 lines = [l for l in lines if not l.strip().startswith("```")]
                 text = "\n".join(lines)
@@ -137,7 +137,7 @@ async def deepseek_generate_json(
             return json.loads(text)
         except json.JSONDecodeError:
             if attempt < max_retries:
-                ***REMOVED*** 追加提示让模型修正
+                # 追加提示让模型修正
                 prompt = f"{prompt}\n\n上一次回复不是有效 JSON，请直接返回 JSON，不要加 markdown 代码块。"
                 continue
             raise ValueError(f"DeepSeek 返回的 JSON 解析失败: {text[:200]}")
@@ -176,7 +176,7 @@ async def deepseek_stream(
                 delta = chunk.choices[0].delta
                 if delta.content:
                     yield delta.content
-            return  ***REMOVED*** 流正常结束
+            return  # 流正常结束
 
         except APIConnectionError as e:
             last_error = e

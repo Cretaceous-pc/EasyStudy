@@ -41,7 +41,7 @@ export default function ProfileEmpty({ onStartQuestionnaire }: ProfileEmptyProps
         className="px-5 py-2 rounded-lg border-none cursor-pointer font-medium"
         style={{
           background: 'var(--accent)',
-          color: '***REMOVED***fff',
+          color: '#fff',
           fontSize: 13,
           transition: 'all 0.2s',
           boxShadow: '0 1px 3px rgba(201,100,66,0.25)',

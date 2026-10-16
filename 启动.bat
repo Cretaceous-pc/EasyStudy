@@ -132,7 +132,7 @@ if not exist ".env" (
 )
 
 echo  [0/4] 加载环境变量 (.env)...
-for /f "usebackq eol=***REMOVED*** tokens=1,* delims==" %%a in (".env") do (
+for /f "usebackq eol= tokens=1,* delims==" %%a in (".env") do (
     set "_k=%%a"
     set "_v=%%b"
     call :set_env_var

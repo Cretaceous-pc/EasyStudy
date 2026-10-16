@@ -1,4 +1,4 @@
-***REMOVED***!/usr/bin/env bash
+#!/usr/bin/env bash
 set -e
 
 cd "$(dirname "$0")"
@@ -9,13 +9,13 @@ echo " ║     easyStudy 一键启动                   ║"
 echo " ╚══════════════════════════════════════════╝"
 echo ""
 
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** 1. 环境检查
-***REMOVED*** ═══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+# 1. 环境检查
+# ═══════════════════════════════════════════════════════
 
 CHECK_PASS=true
 
-***REMOVED*** ── 颜色定义 ──
+# ── 颜色定义 ──
 GREEN='\033[32m'
 RED='\033[31m'
 YELLOW='\033[33m'
@@ -37,10 +37,10 @@ check_cmd() {
     fi
 }
 
-***REMOVED*** ── Java ──
+# ── Java ──
 if command -v java >/dev/null 2>&1; then
     JAVA_RAW=$(java -version 2>&1 | head -1)
-    ***REMOVED*** 从 "openjdk version \"21.0.1\" ..." 或 "java version \"1.8.0_504\"" 中取主版本号
+    # 从 "openjdk version \"21.0.1\" ..." 或 "java version \"1.8.0_504\"" 中取主版本号
     JAVA_MAJOR=$(echo "$JAVA_RAW" | sed -n 's/.*version "\([0-9]*\).*/\1/p')
     if [ -n "$JAVA_MAJOR" ] && [ "$JAVA_MAJOR" -ge 21 ] 2>/dev/null; then
         echo -e " ${GREEN}[√]${RESET} Java: $JAVA_RAW"
@@ -57,13 +57,13 @@ else
     CHECK_PASS=false
 fi
 
-***REMOVED*** ── Maven ──
+# ── Maven ──
 check_cmd "Maven" "mvn" "请安装 Maven 并确保 mvn 命令可用"
 
-***REMOVED*** ── Node.js ──
+# ── Node.js ──
 check_cmd "Node.js" "node"
 
-***REMOVED*** ── Python ──
+# ── Python ──
 PYTHON_CMD=""
 command -v python3 >/dev/null 2>&1 && PYTHON_CMD=python3
 command -v python >/dev/null 2>&1 && PYTHON_CMD=python
@@ -75,10 +75,10 @@ else
     CHECK_PASS=false
 fi
 
-***REMOVED*** ── uv ──
+# ── uv ──
 check_cmd "uv" "uv" "请安装 uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
 
-***REMOVED*** ── Docker ──
+# ── Docker ──
 if docker info >/dev/null 2>&1; then
     echo -e " ${GREEN}[√]${RESET} Docker: 运行中"
 else
@@ -86,7 +86,7 @@ else
     CHECK_PASS=false
 fi
 
-***REMOVED*** ── 端口检查 ──
+# ── 端口检查 ──
 echo ""
 echo " ── 端口检查 ──"
 for port in 5432 6379 8001 9000 8080 8000 5173; do
@@ -108,24 +108,24 @@ echo -e "  ${GREEN}[√] 环境检查全部通过!${RESET}"
 echo " ═══════════════════════════════════════════"
 echo ""
 
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** 2. 启动中间件 (Docker)
-***REMOVED*** ═══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+# 2. 启动中间件 (Docker)
+# ═══════════════════════════════════════════════════════
 
 echo " [1/4] 启动中间件容器..."
 docker compose up -d --wait postgres redis chroma minio
 echo -e " ${GREEN}[√]${RESET} 中间件已就绪"
 
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** 3. 启动 FastAPI (uv)
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** 2.5 加载 .env
-***REMOVED***
-***REMOVED*** 所有敏感配置（数据库口令、MinIO 口令、JWT 密钥、SMTP 授权码、
-***REMOVED*** 大模型 API Key）只存在于 .env。.env 被 .gitignore 忽略，绝不入库。
-***REMOVED*** 本脚本不提供任何硬编码回退值 —— 缺失即报错退出，避免"用示例密钥跑起来"。
-***REMOVED*** ═══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+# 3. 启动 FastAPI (uv)
+# ═══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+# 2.5 加载 .env
+#
+# 所有敏感配置（数据库口令、MinIO 口令、JWT 密钥、SMTP 授权码、
+# 大模型 API Key）只存在于 .env。.env 被 .gitignore 忽略，绝不入库。
+# 本脚本不提供任何硬编码回退值 —— 缺失即报错退出，避免"用示例密钥跑起来"。
+# ═══════════════════════════════════════════════════════
 
 load_env() {
     if [ ! -f .env ]; then
@@ -135,30 +135,30 @@ load_env() {
         exit 1
     fi
 
-    ***REMOVED*** 逐行解析 KEY=VALUE，跳过注释与空行；值两侧的单/双引号会被去掉。
-    ***REMOVED*** 用 set -a 让每个赋值自动导出，子进程（mvn / uvicorn）即可继承。
+    # 逐行解析 KEY=VALUE，跳过注释与空行；值两侧的单/双引号会被去掉。
+    # 用 set -a 让每个赋值自动导出，子进程（mvn / uvicorn）即可继承。
     local _prev_opts
     _prev_opts=$(set +o)
     set -a
     while IFS= read -r line || [ -n "$line" ]; do
-        line="${line%$'\r'}"                       ***REMOVED*** 去掉 Windows 换行残留
+        line="${line%$'\r'}"                        去掉 Windows 换行残留
         case "$line" in
-            ''|'***REMOVED***'*) continue ;;
+            ''|''*) continue ;;
         esac
         case "$line" in
             *=*) ;;
             *) continue ;;
         esac
         local key="${line%%=*}"
-        local val="${line***REMOVED****=}"
-        ***REMOVED*** 去掉行尾注释（仅当值未被引号包裹时）
+        local val="${line*=}"
+        # 去掉行尾注释（仅当值未被引号包裹时）
         case "$val" in
             \"*\"|\'*\') ;;
-            *) val="${val%%***REMOVED****}" ;;
+            *) val="${val%%*}" ;;
         esac
-        ***REMOVED*** 去掉包裹引号
-        val="${val%\"}"; val="${val***REMOVED***\"}"
-        val="${val%\'}"; val="${val***REMOVED***\'}"
+        # 去掉包裹引号
+        val="${val%\"}"; val="${val\"}"
+        val="${val%\'}"; val="${val\'}"
         key="$(echo "$key" | tr -d '[:space:]')"
         [ -z "$key" ] && continue
         export "$key=$val"
@@ -170,7 +170,7 @@ echo " [0/4] 加载环境变量 (.env)..."
 load_env
 echo -e " ${GREEN}[√]${RESET} 环境变量已加载"
 
-***REMOVED*** 关键密钥必须存在，否则后端会在启动时失败 —— 这里提前给出明确原因
+# 关键密钥必须存在，否则后端会在启动时失败 —— 这里提前给出明确原因
 for _required in JWT_SECRET DB_PASSWORD MINIO_PASSWORD; do
     if [ -z "$(eval echo "\$$_required")" ]; then
         echo -e " ${RED}[X] .env 中缺少必填项: $_required${RESET}"
@@ -186,28 +186,28 @@ if [ ! -d .venv ]; then
     uv pip install -r requirements.txt
 fi
 source .venv/bin/activate
-***REMOVED*** 仅监听回环地址：FastAPI 无独立鉴权（身份由 Spring Boot 网关注入），
-***REMOVED*** 绑定 0.0.0.0 会让 X-User-Id / X-User-Role 头被局域网或公网直接伪造。
+# 仅监听回环地址：FastAPI 无独立鉴权（身份由 Spring Boot 网关注入），
+# 绑定 0.0.0.0 会让 X-User-Id / X-User-Role 头被局域网或公网直接伪造。
 nohup uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/easystudy-fastapi.log 2>&1 &
 deactivate
 cd ..
 sleep 5
 echo -e " ${GREEN}[√]${RESET} FastAPI 已启动"
 
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** 4. 启动 Spring Boot
-***REMOVED*** ═══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+# 4. 启动 Spring Boot
+# ═══════════════════════════════════════════════════════
 echo " [3/4] 启动 Spring Boot 后端..."
 cd backend-spring
-***REMOVED*** 凭证全部来自上面的 load_env（.env），此处不再硬编码任何密钥
+# 凭证全部来自上面的 load_env（.env），此处不再硬编码任何密钥
 nohup mvn spring-boot:run -q > /tmp/easystudy-springboot.log 2>&1 &
 cd ..
 sleep 30
 echo -e " ${GREEN}[√]${RESET} Spring Boot 已启动"
 
-***REMOVED*** ═══════════════════════════════════════════════════════
-***REMOVED*** 5. 启动前端
-***REMOVED*** ═══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+# 5. 启动前端
+# ═══════════════════════════════════════════════════════
 echo " [4/4] 启动前端..."
 cd frontend
 nohup npm run dev > /tmp/easystudy-frontend.log 2>&1 &

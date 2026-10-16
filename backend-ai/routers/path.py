@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/path", tags=["path"])
 
-***REMOVED*** 路径生成总时限（原先 ainvoke 无超时，上游挂起会长期占用连接）
+# 路径生成总时限（原先 ainvoke 无超时，上游挂起会长期占用连接）
 PATH_GEN_TIMEOUT_SEC = 240.0
 
 
@@ -36,23 +36,23 @@ def _require_enrollment(student_id: int, course_id: int) -> None:
     if not check_enrollment(student_id, course_id):
         raise HTTPException(status_code=403, detail="未选修该课程，无权访问该课程数据")
 
-***REMOVED*** 模块级编译图（启动时编译一次）
+# 模块级编译图（启动时编译一次）
 path_app = compile_path_graph()
 
 
-***REMOVED*** ── 请求/响应模型 ──
+# ── 请求/响应模型 ──
 
 class PathGenerateRequest(BaseModel):
     course_id: int
     force_regenerate: bool = False
-    questionnaire: Optional[dict] = None  ***REMOVED*** 前端问卷答案 {goal, level, weeklyHours, preferStyle, depth, timeline}
+    questionnaire: Optional[dict] = None # 前端问卷答案 {goal, level, weeklyHours, preferStyle, depth, timeline}
 
 
 class PathItemStatusRequest(BaseModel):
-    status: str  ***REMOVED*** "pending" | "in_progress" | "completed" | "skipped"
+    status: str # "pending" | "in_progress" | "completed" | "skipped"
 
 
-***REMOVED*** ── 端点 ──
+# ── 端点 ──
 
 @router.post("/generate")
 async def generate_path(
@@ -65,7 +65,7 @@ async def generate_path(
         f"Generating learning path: student={user_id} course={req.course_id}"
     )
 
-    ***REMOVED*** 如果不是强制重新生成，先检查是否已有活跃路径
+    # 如果不是强制重新生成，先检查是否已有活跃路径
     if not req.force_regenerate:
         existing = get_active_learning_path(user_id, req.course_id)
         if existing:
@@ -76,7 +76,7 @@ async def generate_path(
                 "from_cache": True,
             }
 
-    ***REMOVED*** 构造初始 state 并执行图
+    # 构造初始 state 并执行图
     initial_state: PathGenState = {
         "student_id": user_id,
         "course_id": req.course_id,

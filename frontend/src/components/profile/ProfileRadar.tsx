@@ -14,22 +14,22 @@ export default function ProfileRadar({ dimensions }: ProfileRadarProps) {
     const dataValues = dimensions.map((d) => d.value);
 
     return {
-      color: ['***REMOVED***c96442'],
+      color: ['#c96442'],
       radar: {
         indicator,
         shape: 'polygon' as const,
         radius: '65%',
         center: ['50%', '50%'],
         axisName: {
-          color: '***REMOVED***5e5d59',
+          color: '#5e5d59',
           fontSize: 12,
           fontFamily: 'var(--font-sans)',
         },
         splitArea: {
-          areaStyle: { color: ['***REMOVED***faf9f5', '***REMOVED***f5f4ed', '***REMOVED***faf9f5', '***REMOVED***f5f4ed'] },
+          areaStyle: { color: ['#faf9f5', '#f5f4ed', '#faf9f5', '#f5f4ed'] },
         },
-        axisLine: { lineStyle: { color: '***REMOVED***e8e6dc' } },
-        splitLine: { lineStyle: { color: '***REMOVED***e8e6dc' } },
+        axisLine: { lineStyle: { color: '#e8e6dc' } },
+        splitLine: { lineStyle: { color: '#e8e6dc' } },
       },
       series: [
         {
@@ -40,18 +40,18 @@ export default function ProfileRadar({ dimensions }: ProfileRadarProps) {
               name: '当前画像',
               symbol: 'circle' as const,
               symbolSize: 6,
-              lineStyle: { width: 2, color: '***REMOVED***c96442' },
+              lineStyle: { width: 2, color: '#c96442' },
               areaStyle: { color: 'rgba(201,100,66,0.12)' },
-              itemStyle: { color: '***REMOVED***c96442', borderColor: '***REMOVED***fff', borderWidth: 2 },
+              itemStyle: { color: '#c96442', borderColor: '#fff', borderWidth: 2 },
             },
           ],
         },
       ],
       tooltip: {
         trigger: 'item' as const,
-        backgroundColor: '***REMOVED***faf9f5',
-        borderColor: '***REMOVED***f0eee6',
-        textStyle: { color: '***REMOVED***141413', fontSize: 12 },
+        backgroundColor: '#faf9f5',
+        borderColor: '#f0eee6',
+        textStyle: { color: '#141413', fontSize: 12 },
         formatter: (params: any) => {
           const vals: number[] = params.value;
           let html = `<div style="font-weight:500;margin-bottom:4px">${params.name}</div>`;
@@ -59,7 +59,7 @@ export default function ProfileRadar({ dimensions }: ProfileRadarProps) {
             const dim = dimensions[i];
             const display = dim?.rawValue ?? v;
             html += `<div style="display:flex;align-items:center;gap:6px;margin:2px 0">
-              <span style="width:6px;height:6px;border-radius:50%;background:***REMOVED***c96442"></span>
+              <span style="width:6px;height:6px;border-radius:50%;background:#c96442"></span>
               <span style="flex:1">${dim?.label ?? '?'}</span>
               <span style="font-weight:500">${display}</span>
             </div>`;

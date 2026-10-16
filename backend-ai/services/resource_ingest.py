@@ -31,7 +31,7 @@ def resource_content_to_markdown(resource_type: str, content: dict) -> str:
         md = ""
         exercises = content.get("exercises", [])
         for i, ex in enumerate(exercises, 1):
-            md += f"***REMOVED******REMOVED*** 习题 {i}\n\n"
+            md += f"## 习题 {i}\n\n"
             md += f"**题目**: {ex.get('question', '')}\n\n"
             if ex.get("options"):
                 for opt in ex["options"]:
@@ -43,10 +43,10 @@ def resource_content_to_markdown(resource_type: str, content: dict) -> str:
             md += "---\n\n"
         return md
     elif resource_type == "code_case":
-        ***REMOVED*** LLM 已生成完整 Markdown，直接返回
+        # LLM 已生成完整 Markdown，直接返回
         if "markdown" in content:
             return content["markdown"]
-        ***REMOVED*** 兼容旧格式 {code, language, explanation}
+        # 兼容旧格式 {code, language, explanation}
         md = ""
         code = content.get("code", "")
         lang = content.get("language", "")
@@ -94,14 +94,14 @@ def ingest_resource(
     minio_client = get_minio_client()
     bucket = "materials"
 
-    ***REMOVED*** ── 步骤1: 内容 → Markdown ──
+    # ── 步骤1: 内容 → Markdown ──
     logger.info(f"[ingest] 资源 {resource_id} ({resource_type}) 开始入库")
     md_content = resource_content_to_markdown(resource_type, content)
     if not md_content.strip():
         logger.warning(f"[ingest] 资源 {resource_id} 内容为空，跳过入库")
         return {"material_id": None, "file_url": None, "chunk_count": 0}
 
-    ***REMOVED*** ── 步骤2: 上传 MinIO ──
+    # ── 步骤2: 上传 MinIO ──
     type_dir = {
         "document": "documents",
         "mermaid": "mermaid",
@@ -125,7 +125,7 @@ def ingest_resource(
     file_url = object_name
     logger.info(f"[ingest] MinIO 上传完成: {object_name}")
 
-    ***REMOVED*** ── 步骤3: 创建 course_materials 记录 ──
+    # ── 步骤3: 创建 course_materials 记录 ──
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -147,14 +147,14 @@ def ingest_resource(
             material_id = cur.fetchone()[0]
     logger.info(f"[ingest] course_materials 记录: id={material_id}")
 
-    ***REMOVED*** ── 步骤4: 切割文档 ──
+    # ── 步骤4: 切割文档 ──
     splitter = get_splitter()
     chunks = splitter(md_content)
     if not chunks:
         logger.warning(f"[ingest] 资源 {resource_id} 切割后无 chunk")
         return {"material_id": material_id, "file_url": file_url, "chunk_count": 0}
 
-    ***REMOVED*** ── 步骤5: 向量化 → Chroma ──
+    # ── 步骤5: 向量化 → Chroma ──
     from rag.vectorstore import get_vectorstore
 
     vs = get_vectorstore("easystudy_chunks")
@@ -179,7 +179,7 @@ def ingest_resource(
     )
     logger.info(f"[ingest] 向量化完成: {len(chunks)} vectors")
 
-    ***REMOVED*** ── 步骤6: 写入 knowledge_chunks 表 ──
+    # ── 步骤6: 写入 knowledge_chunks 表 ──
     with get_connection() as conn:
         with conn.cursor() as cur:
             for i, (text, chunk_hash, vector_id, metadata) in enumerate(
@@ -200,7 +200,7 @@ def ingest_resource(
                         vector_id, json.dumps(metadata, ensure_ascii=False),
                     ),
                 )
-            ***REMOVED*** 回填 chunk_count
+            # 回填 chunk_count
             cur.execute(
                 "UPDATE course_materials SET chunk_count = %s, updated_at = NOW() WHERE id = %s",
                 (len(chunks), material_id),

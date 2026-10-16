@@ -383,7 +383,7 @@ function EmptyStateCard({
           className="border-none cursor-pointer rounded-lg px-4 py-1.5 text-sm transition-all mt-3"
           style={{
             background: 'var(--accent)',
-            color: '***REMOVED***fff',
+            color: 'fff',
             fontFamily: 'var(--font-sans)',
             boxShadow: '0 1px 3px rgba(201,100,66,0.25)',
           }}
@@ -440,7 +440,7 @@ function RecCard({ title, meta, description, onEnroll }: { title: string; meta: 
         </div>
         <div onClick={() => setShowConfirm(true)} className="w-6.5 h-6.5 rounded flex items-center justify-center cursor-pointer"
           style={{ border: '1px solid var(--border-cream)', background: 'var(--parchment)', color: 'var(--accent)', fontSize: 10, transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.color = '***REMOVED***fff'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.color = 'fff'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--parchment)'; e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.borderColor = 'var(--border-cream)'; }}>+</div>
       </div>
       <AppModal
@@ -474,11 +474,11 @@ function RecCard({ title, meta, description, onEnroll }: { title: string; meta: 
 }
 
 const typeMiniConfig: Record<ResourceType, { icon: any; label: string; color: string; bg: string }> = {
-  document: { icon: FileTextOutlined, label: '知识点', color: '***REMOVED***c96442', bg: '***REMOVED***e8d4c8' },
-  mermaid: { icon: PartitionOutlined, label: '思维导图', color: '***REMOVED***5b8c5a', bg: '***REMOVED***d4e4d4' },
-  exercise_set: { icon: EditOutlined, label: '练习题', color: '***REMOVED***d4a017', bg: '***REMOVED***f0e6c8' },
-  code_case: { icon: CodeOutlined, label: '代码案例', color: '***REMOVED***4a7c9b', bg: '***REMOVED***d0e0ec' },
-  reading_material: { icon: ReadOutlined, label: '拓展阅读', color: '***REMOVED***8b6f8b', bg: '***REMOVED***e4d8e4' },
+  document: { icon: FileTextOutlined, label: '知识点', color: 'c96442', bg: 'e8d4c8' },
+  mermaid: { icon: PartitionOutlined, label: '思维导图', color: '5b8c5a', bg: 'd4e4d4' },
+  exercise_set: { icon: EditOutlined, label: '练习题', color: 'd4a017', bg: 'f0e6c8' },
+  code_case: { icon: CodeOutlined, label: '代码案例', color: '4a7c9b', bg: 'd0e0ec' },
+  reading_material: { icon: ReadOutlined, label: '拓展阅读', color: '8b6f8b', bg: 'e4d8e4' },
 };
 
 function ResourceCardSmall({ resource }: { resource: import('../types/resource').Resource }) {

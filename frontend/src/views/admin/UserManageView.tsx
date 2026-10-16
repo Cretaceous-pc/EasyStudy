@@ -10,9 +10,9 @@ import {
 import { useAdminStore } from '../../stores';
 
 const roleMap: Record<string, { label: string; color: string; bg: string }> = {
-  ROLE_STUDENT: { label: '学生', color: '***REMOVED***2e7d32', bg: '***REMOVED***e8f5e9' },
-  ROLE_TEACHER: { label: '教师', color: '***REMOVED***1565c0', bg: '***REMOVED***e3f2fd' },
-  ROLE_ADMIN: { label: '管理员', color: '***REMOVED***c96442', bg: '***REMOVED***e8d4c8' },
+  ROLE_STUDENT: { label: '学生', color: '#2e7d32', bg: '#e8f5e9' },
+  ROLE_TEACHER: { label: '教师', color: '#1565c0', bg: '#e3f2fd' },
+  ROLE_ADMIN: { label: '管理员', color: '#c96442', bg: '#e8d4c8' },
 };
 
 export default function UserManageView() {
@@ -80,9 +80,9 @@ export default function UserManageView() {
         <div className="grid grid-cols-4 gap-4 mb-6">
           {[
             { label: '总用户数', value: stats.total, icon: <TeamOutlined />, color: 'var(--accent)' },
-            { label: '学生', value: stats.students, icon: <UserOutlined />, color: '***REMOVED***2e7d32' },
-            { label: '教师', value: stats.teachers, icon: <SafetyCertificateOutlined />, color: '***REMOVED***1565c0' },
-            { label: '已启用', value: stats.enabled, icon: <CheckCircleOutlined />, color: '***REMOVED***2e7d32' },
+            { label: '学生', value: stats.students, icon: <UserOutlined />, color: '#2e7d32' },
+            { label: '教师', value: stats.teachers, icon: <SafetyCertificateOutlined />, color: '#1565c0' },
+            { label: '已启用', value: stats.enabled, icon: <CheckCircleOutlined />, color: '#2e7d32' },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -220,7 +220,7 @@ export default function UserManageView() {
                   <td className="px-4 py-3">
                     <span
                       className="flex items-center gap-1 text-xs"
-                      style={{ color: user.is_enabled ? '***REMOVED***2e7d32' : '***REMOVED***757575' }}
+                      style={{ color: user.is_enabled ? '#2e7d32' : '#757575' }}
                     >
                       {user.is_enabled ? (
                         <CheckCircleOutlined style={{ fontSize: 11 }} />
@@ -238,7 +238,7 @@ export default function UserManageView() {
                       onClick={() => handleToggleStatus(user.user_id, user.is_enabled)}
                       className="px-2 py-1 rounded-md border-none cursor-pointer text-xs font-medium"
                       style={{
-                        color: user.is_enabled ? 'var(--error-crimson)' : '***REMOVED***2e7d32',
+                        color: user.is_enabled ? 'var(--error-crimson)' : '#2e7d32',
                         background: 'transparent',
                         transition: 'all 0.2s',
                       }}

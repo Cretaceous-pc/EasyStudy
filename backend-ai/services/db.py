@@ -61,12 +61,12 @@ def get_connection():
     try:
         conn = pool.getconn()
     except Exception as e:
-        ***REMOVED*** SimpleConnectionPool 池满时抛 PoolError
+        # SimpleConnectionPool 池满时抛 PoolError
         logger.error("Database connection pool exhausted: %s", e)
         raise RuntimeError("数据库连接繁忙，请稍后重试") from e
 
     try:
-        ***REMOVED*** 取到失效连接则丢弃重建一次
+        # 取到失效连接则丢弃重建一次
         if not _check_alive(conn):
             logger.warning("Discarding dead DB connection, retrying once")
             try:
@@ -112,7 +112,7 @@ def get_course_title(course_id: int) -> str | None:
             return row[0] if row else None
 
 
-***REMOVED*** ── 画像相关 ──
+# ── 画像相关 ──
 
 def load_profile(student_id: int, course_id: int) -> dict:
     """加载学生画像，返回 {profile, version} 或 None"""
@@ -189,7 +189,7 @@ def get_profile_history(student_id: int, course_id: int, limit: int = 10) -> lis
             ]
 
 
-***REMOVED*** ── 学习路径相关 ──
+# ── 学习路径相关 ──
 
 def get_active_learning_path(student_id: int, course_id: int) -> dict | None:
     """获取当前活跃的学习路径"""
@@ -205,7 +205,7 @@ def get_active_learning_path(student_id: int, course_id: int) -> dict | None:
             if not row:
                 return None
             path_id = row[0]
-            ***REMOVED*** 获取路径节点
+            # 获取路径节点
             cur.execute(
                 "SELECT id, seq_order, item_type, item_ref_id, title, description, "
                 "estimated_minutes, dependencies, detail, teach_content, status, completed_at FROM learning_path_items "
@@ -241,7 +241,7 @@ def save_learning_path(
     import json as _json
     with get_connection() as conn:
         with conn.cursor() as cur:
-            ***REMOVED*** 查询将被废弃的旧路径 ID（用于清理关联数据）
+            # 查询将被废弃的旧路径 ID（用于清理关联数据）
             cur.execute(
                 "SELECT id FROM learning_paths "
                 "WHERE student_id = %s AND course_id = %s AND status = 'active'",
@@ -249,14 +249,14 @@ def save_learning_path(
             )
             abandoned_ids = [r[0] for r in cur.fetchall()]
 
-            ***REMOVED*** 废弃旧路径
+            # 废弃旧路径
             cur.execute(
                 "UPDATE learning_paths SET status = 'abandoned', updated_at = NOW() "
                 "WHERE student_id = %s AND course_id = %s AND status = 'active'",
                 (student_id, course_id),
             )
 
-            ***REMOVED*** 清理旧路径的知识库切片（path_id 存储在 metadata JSONB 中）
+            # 清理旧路径的知识库切片（path_id 存储在 metadata JSONB 中）
             if abandoned_ids:
                 cur.execute(
                     "DELETE FROM knowledge_chunks WHERE (metadata->>'path_id')::int = ANY(%s)",
@@ -266,14 +266,14 @@ def save_learning_path(
                     f"Cleaned knowledge_chunks for abandoned paths: {abandoned_ids}"
                 )
 
-            ***REMOVED*** 创建新路径
+            # 创建新路径
             cur.execute(
                 "INSERT INTO learning_paths (student_id, course_id, profile_version, status) "
                 "VALUES (%s, %s, %s, 'active') RETURNING id",
                 (student_id, course_id, profile_version),
             )
             path_id = cur.fetchone()[0]
-            ***REMOVED*** 插入节点
+            # 插入节点
             for item in items:
                 deps = _json.dumps(item.get("dependencies", []))
                 detail = _json.dumps(item.get("detail", {}), ensure_ascii=False)
@@ -387,7 +387,7 @@ def get_completed_items(student_id: int, course_id: int) -> list:
     """获取已完成的学习项"""
     with get_connection() as conn:
         with conn.cursor() as cur:
-            ***REMOVED*** 已完成路径节点
+            # 已完成路径节点
             cur.execute(
                 "SELECT lpi.item_type, lpi.item_ref_id, lpi.completed_at "
                 "FROM learning_path_items lpi "
@@ -427,7 +427,7 @@ def save_teach_chunks(path_id: int, course_id: int, chunks: list) -> None:
         )
 
 
-***REMOVED*** ── 练习相关 ──
+# ── 练习相关 ──
 
 def save_exercise_attempt(
     student_id: int, resource_id: int, exercise_index: int,
@@ -438,7 +438,7 @@ def save_exercise_attempt(
     import json
     with get_connection() as conn:
         with conn.cursor() as cur:
-            ***REMOVED*** 获取当前尝试次数
+            # 获取当前尝试次数
             cur.execute(
                 "SELECT COUNT(*) FROM exercise_attempts "
                 "WHERE student_id = %s AND resource_id = %s AND exercise_index = %s",
@@ -485,14 +485,14 @@ def get_exercise_history(
             where_clause = " AND ".join(conditions)
             join_clause = "LEFT JOIN resources r ON ea.resource_id = r.id" if course_id else ""
 
-            ***REMOVED*** 计数
+            # 计数
             cur.execute(
                 f"SELECT COUNT(*) FROM exercise_attempts ea {join_clause} WHERE {where_clause}",
                 params,
             )
             total = cur.fetchone()[0]
 
-            ***REMOVED*** 分页查询
+            # 分页查询
             offset = (page - 1) * page_size
             select_fields = (
                 "ea.id, ea.resource_id, ea.exercise_index, ea.is_correct, "
@@ -537,7 +537,7 @@ def get_exercise_wrong_count(student_id: int, resource_id: int, exercise_index: 
                 if row[0] is False:
                     wrong_count += 1
                 else:
-                    break  ***REMOVED*** 答对就停止计数
+                    break # 答对就停止计数
             return wrong_count
 
 
@@ -575,7 +575,7 @@ def get_existing_profile_json(student_id: int, course_id: int) -> dict:
             return {}
 
 
-***REMOVED*** ── 对话相关 ──
+# ── 对话相关 ──
 
 def create_conversation(
     student_id: int, course_id: int, title: str = "",
@@ -628,11 +628,11 @@ def get_conversations(student_id: int, course_id: int | None = None, page: int =
                 params.append(course_id)
             where = " AND ".join(conditions)
 
-            ***REMOVED*** 计数
+            # 计数
             cur.execute(f"SELECT COUNT(*) FROM conversations WHERE {where}", params)
             total = cur.fetchone()[0]
 
-            ***REMOVED*** 分页查询
+            # 分页查询
             offset = (page - 1) * page_size
             cur.execute(
                 f"SELECT id, course_id, material_id, context_type, title, "
@@ -708,7 +708,7 @@ def get_conversation_messages(
     import json as _json
     with get_connection() as conn:
         with conn.cursor() as cur:
-            ***REMOVED*** 验证对话归属
+            # 验证对话归属
             cur.execute(
                 "SELECT 1 FROM conversations WHERE id = %s AND student_id = %s",
                 (conversation_id, student_id),
@@ -723,12 +723,12 @@ def get_conversation_messages(
                 params.append(before_id)
 
             where = " AND ".join(conditions)
-            params.append(limit + 1)  ***REMOVED*** 多取一条判断 has_more
+            params.append(limit + 1) # 多取一条判断 has_more
 
-            ***REMOVED*** 必须按 id DESC 取「最新的一页」再反转。
-            ***REMOVED*** 原实现是 ORDER BY id ASC + LIMIT，返回的是对话最开头的窗口；
-            ***REMOVED*** 前端用返回结果里最旧的 id 作为下一页 before_id，会得到空结果，
-            ***REMOVED*** 因此永远看不到最近的消息（实测表现为"历史消息停在最早几条"）。
+            # 必须按 id DESC 取「最新的一页」再反转。
+            # 原实现是 ORDER BY id ASC + LIMIT，返回的是对话最开头的窗口；
+            # 前端用返回结果里最旧的 id 作为下一页 before_id，会得到空结果，
+            # 因此永远看不到最近的消息（实测表现为"历史消息停在最早几条"）。
             cur.execute(
                 f"SELECT id, role, content, metadata, created_at FROM messages "
                 f"WHERE {where} ORDER BY id DESC LIMIT %s",
@@ -737,7 +737,7 @@ def get_conversation_messages(
             rows = cur.fetchall()
             has_more = len(rows) > limit
             rows = rows[:limit]
-            rows.reverse()  ***REMOVED*** 反转回时间正序，供前端按顺序渲染
+            rows.reverse() # 反转回时间正序，供前端按顺序渲染
 
             items = []
             for r in rows:
@@ -754,7 +754,7 @@ def get_conversation_messages(
             return {"items": items, "has_more": has_more}
 
 
-***REMOVED*** ── 资源相关 ──
+# ── 资源相关 ──
 
 def save_resource(
     student_id: int,

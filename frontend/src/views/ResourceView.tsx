@@ -150,7 +150,7 @@ export default function ResourceView() {
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg border-none cursor-pointer"
                   style={{
                     background: isSelected ? 'var(--accent)' : 'var(--parchment)',
-                    color: isSelected ? '***REMOVED***fff' : 'var(--olive-gray)',
+                    color: isSelected ? 'fff' : 'var(--olive-gray)',
                     fontSize: 12,
                     transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                     boxShadow: isSelected
@@ -247,7 +247,7 @@ export default function ResourceView() {
             color:
               !courseId || !topic || selectedTypes.length === 0 || isGenerating
                 ? 'var(--stone-gray)'
-                : '***REMOVED***fff',
+                : 'fff',
             fontSize: 13,
             transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             boxShadow:
