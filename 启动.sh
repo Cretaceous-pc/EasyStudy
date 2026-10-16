@@ -102,6 +102,65 @@ echo -e " ${GREEN}[√]${RESET} 中间件已就绪"
 ***REMOVED*** ═══════════════════════════════════════════════════════
 ***REMOVED*** 3. 启动 FastAPI (uv)
 ***REMOVED*** ═══════════════════════════════════════════════════════
+***REMOVED*** ═══════════════════════════════════════════════════════
+***REMOVED*** 2.5 加载 .env
+***REMOVED***
+***REMOVED*** 所有敏感配置（数据库口令、MinIO 口令、JWT 密钥、SMTP 授权码、
+***REMOVED*** 大模型 API Key）只存在于 .env。.env 被 .gitignore 忽略，绝不入库。
+***REMOVED*** 本脚本不提供任何硬编码回退值 —— 缺失即报错退出，避免"用示例密钥跑起来"。
+***REMOVED*** ═══════════════════════════════════════════════════════
+
+load_env() {
+    if [ ! -f .env ]; then
+        echo -e " ${RED}[X] 未找到 .env 文件${RESET}"
+        echo "     请先复制模板并填写真实配置:"
+        echo "       cp .env.example .env"
+        exit 1
+    fi
+
+    ***REMOVED*** 逐行解析 KEY=VALUE，跳过注释与空行；值两侧的单/双引号会被去掉。
+    ***REMOVED*** 用 set -a 让每个赋值自动导出，子进程（mvn / uvicorn）即可继承。
+    local _prev_opts
+    _prev_opts=$(set +o)
+    set -a
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%$'\r'}"                       ***REMOVED*** 去掉 Windows 换行残留
+        case "$line" in
+            ''|'***REMOVED***'*) continue ;;
+        esac
+        case "$line" in
+            *=*) ;;
+            *) continue ;;
+        esac
+        local key="${line%%=*}"
+        local val="${line***REMOVED****=}"
+        ***REMOVED*** 去掉行尾注释（仅当值未被引号包裹时）
+        case "$val" in
+            \"*\"|\'*\') ;;
+            *) val="${val%%***REMOVED****}" ;;
+        esac
+        ***REMOVED*** 去掉包裹引号
+        val="${val%\"}"; val="${val***REMOVED***\"}"
+        val="${val%\'}"; val="${val***REMOVED***\'}"
+        key="$(echo "$key" | tr -d '[:space:]')"
+        [ -z "$key" ] && continue
+        export "$key=$val"
+    done < .env
+    eval "$_prev_opts"
+}
+
+echo " [0/4] 加载环境变量 (.env)..."
+load_env
+echo -e " ${GREEN}[√]${RESET} 环境变量已加载"
+
+***REMOVED*** 关键密钥必须存在，否则后端会在启动时失败 —— 这里提前给出明确原因
+for _required in JWT_SECRET DB_PASSWORD MINIO_PASSWORD; do
+    if [ -z "$(eval echo "\$$_required")" ]; then
+        echo -e " ${RED}[X] .env 中缺少必填项: $_required${RESET}"
+        exit 1
+    fi
+done
+
 echo " [2/4] 启动 FastAPI AI 后端..."
 cd backend-ai
 if [ ! -d .venv ]; then
@@ -110,7 +169,9 @@ if [ ! -d .venv ]; then
     uv pip install -r requirements.txt
 fi
 source .venv/bin/activate
-nohup uvicorn main:app --host 0.0.0.0 --port 8000 --reload > /tmp/easystudy-fastapi.log 2>&1 &
+***REMOVED*** 仅监听回环地址：FastAPI 无独立鉴权（身份由 Spring Boot 网关注入），
+***REMOVED*** 绑定 0.0.0.0 会让 X-User-Id / X-User-Role 头被局域网或公网直接伪造。
+nohup uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/easystudy-fastapi.log 2>&1 &
 deactivate
 cd ..
 sleep 5
@@ -121,14 +182,7 @@ echo -e " ${GREEN}[√]${RESET} FastAPI 已启动"
 ***REMOVED*** ═══════════════════════════════════════════════════════
 echo " [3/4] 启动 Spring Boot 后端..."
 cd backend-spring
-export JWT_SECRET=REDACTED_JWT_SECRET_ROTATE_ME
-export DB_USER=easystudy
-export DB_PASSWORD=REDACTED_DB_PASSWORD_ROTATE_ME
-export MINIO_USER=easystudy_admin
-export MINIO_PASSWORD=REDACTED_MINIO_PASSWORD_ROTATE_ME
-export MAIL_HOST=smtp.qq.com
-export MAIL_USERNAME=REDACTED_MAIL_USERNAME
-export MAIL_PASSWORD=REDACTED_MAIL_PASSWORD_ROTATE_ME
+***REMOVED*** 凭证全部来自上面的 load_env（.env），此处不再硬编码任何密钥
 nohup mvn spring-boot:run -q > /tmp/easystudy-springboot.log 2>&1 &
 cd ..
 sleep 30

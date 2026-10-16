@@ -54,3 +54,9 @@ export-data/
 ***REMOVED*** ── 本地工具配置 ──
 .claude/
 reasonix.toml
+
+***REMOVED*** ── 安全审计报告（含漏洞利用细节与凭证样本，禁止入库） ──
+.audit/
+
+***REMOVED*** ── 一次性工具临时目录 ──
+.git-tmp/

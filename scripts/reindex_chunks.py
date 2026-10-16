@@ -116,7 +116,8 @@ def main():
         api_key = settings.embedding_api_key or settings.deepseek_api_key
         base_url = settings.embedding_base_url or settings.deepseek_base_url
         logger.info(f"   API Base URL: {base_url}")
-        logger.info(f"   API Key: {api_key[:12]}..." if api_key else "   API Key: **未配置**")
+        ***REMOVED*** 只回显是否存在与长度，绝不打印密钥本身（即使是前缀，也已构成信息泄漏）
+        logger.info(f"   API Key: **已配置（长度 {len(api_key)}）**" if api_key else "   API Key: **未配置**")
     logger.info(f"   Chroma: {settings.chroma_host}:{settings.chroma_port}")
     logger.info(f"   批次大小: {args.batch_size}")
     if args.dry_run:

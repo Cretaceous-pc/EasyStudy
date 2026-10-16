@@ -83,8 +83,8 @@ if %errorlevel% neq 0 (
 echo.
 echo  ── 端口检查 ──
 for %%p in (5432 6379 8001 9000 8080 8000 5173) do (
-    netstat -an | findstr "LISTEN" | findstr "%%p" >nul 2>&1
-    if !errorlevel! equ 0 (
+    netstat -an | findstr "LISTEN" | findstr ":%%p " >nul 2>&1
+    if not errorlevel 1 (
         echo  [!] 端口 %%p 已被占用
     )
 )
@@ -101,6 +101,52 @@ echo  ════════════════════════�
 echo   [√] 环境检查全部通过!
 echo  ═══════════════════════════════════════════
 echo.
+
+:: ═══════════════════════════════════════════════
+:: 1.5 加载 .env
+::
+:: 所有敏感配置（数据库口令、MinIO 口令、JWT 密钥、SMTP 授权码、
+:: 大模型 API Key）只存在于 .env。.env 被 .gitignore 忽略，绝不入库。
+:: 本脚本不提供任何硬编码回退值 —— 缺失即报错退出。
+:: ═══════════════════════════════════════════════
+
+if not exist ".env" (
+    echo  [X] 未找到 .env 文件
+    echo      请先复制模板并填写真实配置:
+    echo        copy .env.example .env
+    pause
+    exit /b 1
+)
+
+echo  [0/4] 加载环境变量 (.env)...
+for /f "usebackq eol=***REMOVED*** tokens=1,* delims==" %%a in (".env") do (
+    set "_k=%%a"
+    set "_v=%%b"
+    call :set_env_var
+)
+echo  [√] 环境变量已加载
+
+:: 关键密钥必须存在，否则后端会在启动时失败
+for %%r in (JWT_SECRET DB_PASSWORD MINIO_PASSWORD) do (
+    call echo %%r| findstr /r "." >nul
+    if not defined %%r (
+        echo  [X] .env 中缺少必填项: %%r
+        pause
+        exit /b 1
+    )
+)
+
+goto :after_env
+
+:set_env_var
+:: 去掉键名首尾空格；值若被引号包裹则去引号
+set "_k=%_k: =%"
+if not defined _k goto :eof
+set "_v=%_v:"=%"
+set "%_k%=%_v%"
+goto :eof
+
+:after_env
 
 :: ═══════════════════════════════════════════════
 :: 2. 启动中间件 (Docker)
@@ -127,7 +173,9 @@ if not exist .venv (
     uv venv --python 3.13
     uv pip install -r requirements.txt
 )
-start "easyStudy-FastAPI" cmd /c ".venv\Scripts\activate && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+:: 仅监听回环地址：FastAPI 无独立鉴权（身份由 Spring Boot 网关注入），
+:: 绑定 0.0.0.0 会让 X-User-Id / X-User-Role 头被局域网或公网直接伪造。
+start "easyStudy-FastAPI" cmd /c ".venv\Scripts\activate && uvicorn main:app --host 127.0.0.1 --port 8000"
 cd ..
 timeout /t 5 /nobreak >nul
 echo  [√] FastAPI 已启动
@@ -137,14 +185,7 @@ echo  [√] FastAPI 已启动
 :: ═══════════════════════════════════════════════
 echo  [3/4] 启动 Spring Boot 后端...
 cd backend-spring
-set "JWT_SECRET=REDACTED_JWT_SECRET_ROTATE_ME"
-set "DB_USER=easystudy"
-set "DB_PASSWORD=REDACTED_DB_PASSWORD_ROTATE_ME"
-set "MINIO_USER=easystudy_admin"
-set "MINIO_PASSWORD=REDACTED_MINIO_PASSWORD_ROTATE_ME"
-set "MAIL_HOST=smtp.qq.com"
-set "MAIL_USERNAME=REDACTED_MAIL_USERNAME"
-set "MAIL_PASSWORD=REDACTED_MAIL_PASSWORD_ROTATE_ME"
+:: 凭证全部来自上面 load_env 解析的 .env，此处不再硬编码任何密钥
 start "easyStudy-SpringBoot" cmd /c "mvn spring-boot:run"
 cd ..
 timeout /t 30 /nobreak >nul

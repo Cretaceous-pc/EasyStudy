@@ -10,15 +10,23 @@ import sys
 import psycopg2
 from psycopg2.extras import Json
 
-***REMOVED*** ── 连接配置 (从环境变量读取，默认使用 .env 中的值) ──
+***REMOVED*** ── 连接配置（全部从环境变量读取，无任何硬编码回退值） ──
+***REMOVED*** 运行前请先加载 .env，例如:
+***REMOVED***   set -a && . ./.env && set +a && python scripts/seed-data.py
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "easystudy")
 DB_USER = os.getenv("DB_USER", "easystudy")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "REDACTED_DB_PASSWORD_ROTATE_ME")
 
-***REMOVED*** BCrypt 哈希值 — 明文均为 "Test@12345"
+***REMOVED*** 口令不做默认值回退：缺失时立刻失败，避免悄悄连上错误的库
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+if not DB_PASSWORD:
+    print("错误: 未设置 DB_PASSWORD 环境变量。请先加载 .env（见本文件顶部说明）。", file=sys.stderr)
+    sys.exit(1)
+
+***REMOVED*** BCrypt 哈希值 — 明文均为 "Test@12345"（仅用于本地/演示环境的种子账号）
 ***REMOVED*** 生成方式: bcrypt.hashpw(b"Test@12345", bcrypt.gensalt(rounds=10))
+***REMOVED*** 注意: 公开部署前请修改这些种子账号的口令，或干脆不要执行本脚本。
 BCRYPT_TEST_PASSWORD = "$2b$10$FgjkbF1MuPvid5VJMxr0me3oLDZU2EgdQZ5dl7z2GmDkrO39p3qj6"
 
 
