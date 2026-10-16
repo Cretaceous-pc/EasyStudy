@@ -50,7 +50,11 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 未在 .env 中设置}
     ports:
-      - "${BIND_ADDR:-127.0.0.1}:6379:6379"
+      # 宿主端口可配置: 本机若已有原生 Redis（常见于 Windows 开发机）占用
+      # 127.0.0.1:6379，容器内的 Redis 无法绑定同一地址+端口。
+      # 此时在 .env 中设置 REDIS_HOST_PORT=6380 让两者共存
+      # （原生模式的应用连原生 Redis，容器化应用连容器内的 Redis）。
+      - "${BIND_ADDR:-127.0.0.1}:${REDIS_HOST_PORT:-6379}:6379"
     volumes:
       - ./data/redis:/data
     healthcheck:
